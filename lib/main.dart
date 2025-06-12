@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:unitime/screens/home/home_screen.dart';
 import 'package:unitime/screens/schedule/schedule_screen.dart';
 import 'package:unitime/screens/settings/settings_screen.dart';
+import 'package:unitime/screens/splash/splash_screen.dart';
 import 'package:unitime/utils/app_colors.dart';
 import 'package:unitime/widgets/bottom_nav_bar.dart';
 
@@ -25,7 +26,11 @@ class MyApp extends StatelessWidget {
           Theme.of(context).textTheme,
         ),
       ),
-      home: const MainScreen(),
+      home: const SplashScreen(),
+      routes: {
+        '/home': (context) => const MainScreen(),
+      },
+      // home: const MainScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

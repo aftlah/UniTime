@@ -33,7 +33,7 @@ class HomeScreen extends StatelessWidget {
             SizedBox(height: 20),
             PremiumBanner(),
             SizedBox(height: 20),
-            const TasksSection(),
+            TasksSection(),
           ],
         ),
       ),
