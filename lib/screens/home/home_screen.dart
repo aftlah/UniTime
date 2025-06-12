@@ -1,4 +1,3 @@
-// lib/screens/home/home_screen.dart (Updated)
 import 'package:flutter/material.dart';
 import '../../utils/app_colors.dart';
 import 'widgets/courses_card.dart';
@@ -34,7 +33,7 @@ class HomeScreen extends StatelessWidget {
             SizedBox(height: 20),
             PremiumBanner(),
             SizedBox(height: 20),
-            TasksSection(),
+            const TasksSection(),
           ],
         ),
       ),

@@ -9,4 +9,5 @@ class AppColors {
   static const Color cardYellow = Color(0xFFFFF6E0);
   static const Color cardPink = Color(0xFFFDEBF3);
   static const Color yellow = Color(0xFFF2C94C);
+  // static const Color primary = Color.fromARGB(255, 242, 221, 126);
 }

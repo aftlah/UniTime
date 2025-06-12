@@ -45,6 +45,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     ScheduleScreen(),
     SettingsScreen(),
+    
   ];
 
   void _onItemTapped(int index) {

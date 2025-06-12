@@ -1,9 +1,15 @@
-// lib/screens/home/widgets/tasks_section.dart
 import 'package:flutter/material.dart';
 import '../../../utils/app_colors.dart';
 
-class TasksSection extends StatelessWidget {
+class TasksSection extends StatefulWidget {
   const TasksSection({super.key});
+
+  @override
+  State<TasksSection> createState() => _TasksSectionState();
+}
+
+class _TasksSectionState extends State<TasksSection> {
+  String selectedDay = 'Today';
 
   @override
   Widget build(BuildContext context) {
@@ -13,29 +19,26 @@ class TasksSection extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Tasks',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            TextButton(onPressed: () {}, child: const Text('See All')),
+            const Text(
+              'Tasks',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            TextButton(
+              onPressed: () {},
+              child: const Text('See All'),
+            ),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            TextButton(onPressed: () {}, child: const Text('Yesterday')),
-            ElevatedButton(
-              onPressed: () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Today'),
-            ),
-            TextButton(onPressed: () {}, child: const Text('Tomorrow')),
+            _buildDayButton('Yesterday'),
+            _buildDayButton('Today'),
+            _buildDayButton('Tomorrow'),
           ],
         ),
         const SizedBox(height: 20),
-        // Kartu untuk state ketika tidak ada tugas
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -44,19 +47,20 @@ class TasksSection extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Pastikan Anda menambahkan gambar ini di assets/images/girl_at_desk.png
-              Image.asset('assets/images/girl_at_desk.png', height: 100),
+              Image.asset('assets/icons/gambar1.png', height: 120),
               const SizedBox(width: 20),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "You don't have any tasks!",
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      "You don't have any tasks for $selectedDay!",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                    Text("Press + button to add new tasks"),
+                    const Text("Press + button to add new tasks"),
                   ],
                 ),
               ),
@@ -69,11 +73,42 @@ class TasksSection extends StatelessWidget {
                     // TODO: Implement add new task functionality
                   },
                 ),
-              )
+              ),
             ],
           ),
         ),
       ],
     );
+  }
+
+  Widget _buildDayButton(String day) {
+    final bool isSelected = selectedDay == day;
+    
+    if (isSelected) {
+      return ElevatedButton(
+        onPressed: () {
+          setState(() {
+            selectedDay = day;
+          });
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+        ),
+        child: Text(day),
+      );
+    } else {
+      return TextButton(
+        onPressed: () {
+          setState(() {
+            selectedDay = day;
+          });
+        },
+        child: Text(
+          day,
+          style: const TextStyle(color: AppColors.secondaryText),
+        ),
+      );
+    }
   }
 }
