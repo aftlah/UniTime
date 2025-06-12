@@ -1,4 +1,3 @@
-// lib/screens/home/widgets/courses_card.dart
 import 'package:flutter/material.dart';
 import '../../../utils/app_colors.dart';
 
@@ -44,12 +43,6 @@ class CoursesCard extends StatelessWidget {
               ],
             ),
           ),
-          // Image.network(
-          //   'https://i.pinimg.com/736x/13/54/3c/13543c08374378ff080f1d0c8764b613.png',
-          //   height: 100,
-          //   errorBuilder: (context, error, stackTrace) => Icon(Icons.broken_image, size: 100),
-          // ),
-
           Image.asset('assets/icons/gambar2.png', height: 150),
         ],
       ),

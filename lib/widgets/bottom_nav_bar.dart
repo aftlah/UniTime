@@ -63,7 +63,7 @@ class BottomNavBar extends StatelessWidget {
                     _buildNavItem(1, Icons.calendar_today_outlined,
                         Icons.calendar_today, itemWidth),
                     _buildNavItem(
-                        2, Icons.settings_outlined, Icons.settings, itemWidth),
+                        2, Icons.person_outline, Icons.person, itemWidth),
                   ],
                 ),
               ],
@@ -135,7 +135,7 @@ class BottomNavBar extends StatelessWidget {
       case 1:
         return 'Schedule';
       case 2:
-        return 'Settings';
+        return 'Profile';
       default:
         return '';
     }
