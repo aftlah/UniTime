@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:unitime/utils/app_colors.dart';
 
-class ScheduleScreen extends StatelessWidget {
-  const ScheduleScreen({super.key});
+class JadwalScreen extends StatelessWidget {
+  const JadwalScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +10,7 @@ class ScheduleScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('Schedule',
+        title: Text('Jadwal Kuliah',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
         actions: [
           IconButton(
@@ -28,14 +28,14 @@ class ScheduleScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 children: [
-                  _buildScheduleItem('8:00am', 'Basic mathematics',
-                      '08:00am - 8:45am', AppColors.cardBlue),
-                  _buildScheduleItem('10:00am', 'English Grammar',
-                      '10:00am - 11:10am', AppColors.cardGreen),
-                  _buildScheduleItem('12:00am', 'Science', '12:00am - 12:45am',
-                      AppColors.cardYellow),
-                  _buildScheduleItem('1:00pm', 'World history',
-                      '1:00am - 1:45am', AppColors.cardPink),
+                  _buildScheduleItem('8:00', 'Matematika',
+                      '08:00 - 08:45', AppColors.cardBlue),
+                  _buildScheduleItem('10:00', 'Bahasa Inggris',
+                      '10:00 - 11:10', AppColors.cardGreen),
+                  _buildScheduleItem('12:00', 'Ilmu Pengetahuan Alam',
+                      '12:00 - 12:45', AppColors.cardYellow),
+                  _buildScheduleItem('1:00', 'Sejarah Dunia',
+                      '13:00 - 13:45', AppColors.cardPink),
                 ],
               ),
             )
@@ -51,29 +51,29 @@ class ScheduleScreen extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('This week',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-            Text('See all'),
+        Text('Minggu Ini',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        Text('Lihat Semua'),
           ],
         ),
         const SizedBox(height: 10),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDate('SUN', '04', false),
-            _buildDate('MON', '05', false),
-            _buildDate('TUE', '06', false),
-            _buildDate('WED', '07', false),
-            _buildDate('THE', '08', true), // Today
-            _buildDate('FRI', '09', false),
-            _buildDate('SAT', '10', false),
+        _buildDate('Senin', false),
+        _buildDate('Selasa', false),
+        _buildDate('Rabu', false),
+        _buildDate('Kamis', false),
+        _buildDate('Jumat', true), // Today
+        _buildDate('Sabtu', false),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildDate(String day, String date, bool isActive) {
+  Widget _buildDate(String day, bool isActive) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
       decoration: BoxDecoration(
@@ -86,10 +86,6 @@ class ScheduleScreen extends StatelessWidget {
               style: TextStyle(
                   color: isActive ? Colors.white : Colors.grey, fontSize: 12)),
           const SizedBox(height: 4),
-          Text(date,
-              style: TextStyle(
-                  color: isActive ? Colors.white : Colors.black,
-                  fontWeight: FontWeight.bold)),
         ],
       ),
     );

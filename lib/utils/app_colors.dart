@@ -9,5 +9,20 @@ class AppColors {
   static const Color cardYellow = Color(0xFFFFF6E0);
   static const Color cardPink = Color(0xFFFDEBF3);
   static const Color yellow = Color(0xFFF2C94C);
-  // static const Color primary = Color.fromARGB(255, 242, 221, 126);
+
+  // Palet Biru (Sejuk & Tenang) ===
+  static const Color lightBlue = Color(0xFFE3F2FD); 
+  static const Color darkBlue = Color(0xFF1565C0);  
+
+  // Palet Lavender (Modern & Minimalis) ===
+  static const Color lightLavender = Color(0xFFF3E5F5);
+  static const Color darkPurple = Color(0xFF7B1FA2);   
+
+  // Palet Krem (Hangat & Ramah) ===
+  static const Color creamYellow = Color(0xFFFFF8E1); 
+  static const Color darkBrown = Color(0xFF5D4037);   
+  
+  // Anda bisa juga definisikan warna netral di sini
+  static const Color iconGrey = Color(0xFF757575);
+
 }

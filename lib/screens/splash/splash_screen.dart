@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:unitime/main.dart'; 
 import 'package:unitime/utils/app_colors.dart';
+import 'package:unitime/screens/auth/login/login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -109,7 +109,7 @@ class _SplashScreenState extends State<SplashScreen>
         PageRouteBuilder(
           // Halaman tujuan kita adalah MainScreen
           pageBuilder: (context, animation, secondaryAnimation) =>
-              const MainScreen(),
+              const LoginScreen(),
 
           // Durasi animasi transisi (misalnya, 500 milidetik)
           transitionDuration: const Duration(milliseconds: 500),

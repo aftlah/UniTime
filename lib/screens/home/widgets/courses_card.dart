@@ -1,8 +1,15 @@
+
 import 'package:flutter/material.dart';
 import '../../../utils/app_colors.dart';
 
 class CoursesCard extends StatelessWidget {
-  const CoursesCard({super.key});
+  // 1. Tambahkan parameter fungsi callback di constructor
+  final VoidCallback onLihatTugasTapped;
+
+  const CoursesCard({
+    super.key,
+    required this.onLihatTugasTapped, // Jadikan required
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,31 +25,33 @@ class CoursesCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Take a look to your\ncourses & track your\nprogress',
+                const Text(
+                  'Lihat Jadwal Kuliah Anda dan lihat progres tugas Anda',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO: Implement navigation to courses screen
-                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.yellow,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: Text('Go to courses',
-                      style: TextStyle(color: Colors.black)),
+                  // 2. Gunakan callback di sini, bukan Navigator
+                  onPressed: onLihatTugasTapped,
+                  child: const Text(
+                    'Lihat Tugas',
+                    style: TextStyle(color: Colors.black),
+                  ),
                 ),
               ],
             ),
           ),
+          // Pastikan path asset ini benar di pubspec.yaml
           Image.asset('assets/icons/gambar2.png', height: 150),
         ],
       ),
