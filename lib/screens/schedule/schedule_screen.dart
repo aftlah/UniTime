@@ -65,7 +65,7 @@ class JadwalScreen extends StatelessWidget {
         _buildDate('Selasa', false),
         _buildDate('Rabu', false),
         _buildDate('Kamis', false),
-        _buildDate('Jumat', true), // Today
+        _buildDate('Jumat', true),
         _buildDate('Sabtu', false),
           ],
         ),

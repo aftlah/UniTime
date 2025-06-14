@@ -50,12 +50,13 @@ class _TasksSectionState extends State<TasksSection> {
           child: Row(
             children: [
               // Pastikan path asset ini ada di pubspec.yaml dan proyek Anda
-              // Image.asset('assets/icons/gambar1.png', height: 120),
-              // const SizedBox(width: 20),
+              Image.asset('assets/icons/gambar1.png', height: 120),
+              const SizedBox(width: 20),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    
                     Text(
                       "Kamu tidak memiliki tugas untuk $selectedDay!",
                       style: const TextStyle(

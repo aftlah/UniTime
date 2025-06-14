@@ -45,7 +45,7 @@ class MyApp extends StatelessWidget {
         // Anda mungkin tidak lagi memerlukan route ini jika navigasi
         // hanya terjadi di dalam MainScreen
         '/tugas': (context) => const TugasScreen(),
-        '/jadwal': (context) => const JadwalScreen(),
+        '/jadwal': (context) =>  JadwalScreen(),
       },
       debugShowCheckedModeBanner: false,
     );
@@ -71,9 +71,9 @@ class _MainScreenState extends State<MainScreen> {
       HomeScreen(
         onNavigateToTugas: () => _onItemTapped(2),
       ),
-      const JadwalScreen(),
-      const TugasScreen(),
-      const ProfileScreen(),
+      JadwalScreen(),
+      TugasScreen(),
+      ProfileScreen(),
     ];
   }
 
