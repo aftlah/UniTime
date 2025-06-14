@@ -1,4 +1,3 @@
-// lib/main.dart (Kode Lengkap)
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -69,9 +68,6 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _widgetOptions = <Widget>[
-      // Teruskan fungsi ke HomeScreen yang memicu perubahan tab
-      // Saat tombol di CoursesCard ditekan, fungsi ini akan memanggil
-      // _onItemTapped dengan indeks '2' (indeks TugasScreen).
       HomeScreen(
         onNavigateToTugas: () => _onItemTapped(2),
       ),
