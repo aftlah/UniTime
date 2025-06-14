@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:unitime/main.dart';
-import 'package:unitime/screens/home/home_screen.dart';
+// import 'package:unitime/screens/home/home_screen.dart';
 import 'package:unitime/screens/auth/register/register_screen.dart';
 import 'package:unitime/utils/app_colors.dart';
 import 'package:unitime/utils/routes.dart';

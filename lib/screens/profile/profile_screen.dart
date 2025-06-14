@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:unitime/utils/app_colors.dart';
-import 'package:unitime/screens/auth/login/login_screen.dart';  
+import 'package:unitime/screens/auth/login/login_screen.dart';
+import 'package:unitime/screens/profile/informasi_pribadi_screen.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -68,34 +70,34 @@ class _ProfileScreenState extends State<ProfileScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildProfileHeader(),
-            const SizedBox(height: 32),
-            _buildSectionTitle('Akses Cepat'),
-            const SizedBox(height: 12),
-            FadeTransition(
-              opacity: _fadeAnimation,
-              child: SlideTransition(
-                position: _slideAnimation,
-                child: Column(
-                  children: [
-                    _buildAccessCard(
-                      icon: Icons.calendar_today_outlined,
-                      title: 'Jadwal Matakuliah',
-                      subtitle: 'Lihat jadwal kuliah mingguan Anda',
-                      color: Colors.blue,
-                      onTap: () {},
-                    ),
-                    const SizedBox(height: 12),
-                    _buildAccessCard(
-                      icon: Icons.assignment_outlined,
-                      title: 'Tugas Kuliah',
-                      subtitle: 'Cek tugas yang akan datang',
-                      color: Colors.orange,
-                      onTap: () {},
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            // const SizedBox(height: 32),
+            // _buildSectionTitle('Akses Cepat'),
+            // const SizedBox(height: 12),
+            // FadeTransition(
+            //   opacity: _fadeAnimation,
+            //   child: SlideTransition(
+            //     position: _slideAnimation,
+            //     child: Column(
+            //       children: [
+            //         _buildAccessCard(
+            //           icon: Icons.calendar_today_outlined,
+            //           title: 'Jadwal Matakuliah',
+            //           subtitle: 'Lihat jadwal kuliah mingguan Anda',
+            //           color: Colors.blue,
+            //           onTap: () {},
+            //         ),
+            //         const SizedBox(height: 12),
+            //         _buildAccessCard(
+            //           icon: Icons.assignment_outlined,
+            //           title: 'Tugas Kuliah',
+            //           subtitle: 'Cek tugas yang akan datang',
+            //           color: Colors.orange,
+            //           onTap: () {},
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
             const SizedBox(height: 32),
             _buildSectionTitle('Pengaturan & Akun'),
             const SizedBox(height: 12),
@@ -114,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     // ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
   }
-  
+
   // ... (semua widget builder lainnya sama persis)
   // ... (salin-tempel dari kode Anda)
   // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -274,7 +276,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           _buildSettingsItem(
             Icons.person_outline,
             'Informasi Pribadi',
-            () {},
+            () {
+              Navigator.push(context,  MaterialPageRoute(builder: (context) => const InformasiPribadiScreen()));
+            },
           ),
           _buildDivider(),
           // Ganti callback onTap di sini untuk memanggil fungsi _signOut
