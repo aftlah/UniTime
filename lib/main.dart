@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:unitime/screens/auth/login/login_screen.dart';
 import 'package:unitime/screens/home/home_screen.dart';
+import 'package:unitime/screens/profile/informasi_pribadi_screen.dart';
 import 'package:unitime/screens/profile/profile_screen.dart';
 import 'package:unitime/screens/schedule/schedule_screen.dart';
 import 'package:unitime/screens/splash/splash_screen.dart';
@@ -46,6 +47,7 @@ class MyApp extends StatelessWidget {
         // hanya terjadi di dalam MainScreen
         '/tugas': (context) => const TugasScreen(),
         '/jadwal': (context) => const JadwalScreen(),
+        '/informasiPribadi' : (context) => InformasiPribadiScreen()
       },
       debugShowCheckedModeBanner: false,
     );
