@@ -17,10 +17,15 @@ class _ScheduleCardState extends State<ScheduleCard> {
   @override
   void initState() {
     super.initState();
+    _loadJadwal();
+  }
+
+  void _loadJadwal() {
     _jadwalFuture = JadwalService.getAllJadwal();
   }
 
   String _getNamaHariIni() {
+    // ... (Fungsi ini sudah benar)
     switch (DateTime.now().weekday) {
       case 1:
         return 'Senin';
@@ -51,7 +56,7 @@ class _ScheduleCardState extends State<ScheduleCard> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Jadwal Kuliah',
+              'Jadwal Kuliah Hari Ini', // Judul lebih spesifik
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             TextButton(
@@ -76,58 +81,40 @@ class _ScheduleCardState extends State<ScheduleCard> {
               return _buildLoadingState();
             }
 
-            print("🔄 Memuat jadwal kuliah...");
-            print("SNAPSHOT : ${snapshot.connectionState}");
-            print("SNAPSHOT DATA: ${snapshot.data}");
-
             if (snapshot.hasError) {
+              // Blok ini sekarang hanya akan menangani error koneksi/server
               return _buildErrorState(snapshot.error.toString());
             }
 
-            if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+            // `snapshot.hasData` akan true bahkan untuk list kosong
+            if (snapshot.hasData) {
               final semuaJadwal = snapshot.data!;
               final namaHariIni = _getNamaHariIni();
 
               final jadwalHariIni = semuaJadwal.where((jadwal) {
+                // Gunakan toLowerCase() untuk perbandingan yang aman
                 return jadwal.hari.toLowerCase() == namaHariIni.toLowerCase();
               }).toList();
 
-              // print("Hari ini: $namaHariIni");
-              // print(
-              //     "Semua Jadwal: ${semuaJadwal.map((e) => e.hari).toList()}");
-              // print(
-              //     "Jadwal Hari Ini: ${jadwalHariIni.map((e) => e.namaMatkul).toList()}");
-
               if (jadwalHariIni.isEmpty) {
+                // Kondisi ini akan menangani dua kasus:
+                // 1. Tidak ada jadwal sama sekali (semuaJadwal kosong).
+                // 2. Ada jadwal, tapi tidak ada untuk hari ini.
                 return _buildEmptyState();
               } else {
+                // Tampilkan jadwal untuk hari ini
                 return Column(
-                  children: jadwalHariIni.map((jadwal) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: _buildJadwalContent(jadwal),
-                    );
-                  }).toList(),
+                  children: jadwalHariIni
+                      .map((jadwal) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: _buildJadwalContent(jadwal),
+                          ))
+                      .toList(),
                 );
               }
             }
 
-            // if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-            //   final semuaJadwal = snapshot.data!;
-
-            //   // DEBUG
-            //   print("📅 Semua Jadwal (tanpa filter): ${semuaJadwal.map((e) => e.namaMatkul).toList()}");
-
-            //   return Column(
-            //     children: semuaJadwal.map((jadwal) {
-            //       return Padding(
-            //         padding: const EdgeInsets.only(bottom: 12.0),
-            //         child: _buildJadwalContent(jadwal),
-            //       );
-            //     }).toList(),
-            //   );
-            // }
-
+            // Fallback, seharusnya tidak pernah tercapai jika logic di atas benar
             return _buildEmptyState();
           },
         ),
@@ -135,7 +122,10 @@ class _ScheduleCardState extends State<ScheduleCard> {
     );
   }
 
+  // --- Widget Builder Functions (Tidak ada perubahan di bawah ini) ---
+
   Widget _buildEmptyState() {
+    // ... (kode Anda sudah bagus)
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -150,6 +140,7 @@ class _ScheduleCardState extends State<ScheduleCard> {
             child: IconButton(
               icon: const Icon(Icons.add, color: Colors.white),
               onPressed: () {
+                // TODO: Navigasi ke halaman Tambah Jadwal Kuliah
                 print('Navigasi ke halaman Tambah Jadwal Kuliah');
               },
             ),
@@ -176,6 +167,7 @@ class _ScheduleCardState extends State<ScheduleCard> {
   }
 
   Widget _buildJadwalContent(JadwalModel jadwal) {
+    // ... (kode Anda sudah bagus)
     final waktuMulaiFormatted = jadwal.jamMulai.substring(0, 5);
     final waktuSelesaiFormatted = jadwal.jamSelesai.substring(0, 5);
 
@@ -227,6 +219,7 @@ class _ScheduleCardState extends State<ScheduleCard> {
   }
 
   Widget _buildLoadingState() {
+    // ... (kode Anda sudah bagus)
     return Container(
       height: 120,
       alignment: Alignment.center,
@@ -239,6 +232,8 @@ class _ScheduleCardState extends State<ScheduleCard> {
   }
 
   Widget _buildErrorState(String error) {
+    // Bersihkan pesan error agar lebih rapi
+    final cleanedError = error.replaceAll('Exception: ', '');
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -251,7 +246,7 @@ class _ScheduleCardState extends State<ScheduleCard> {
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              "Gagal memuat jadwal: $error",
+              "Gagal memuat jadwal: $cleanedError",
               style: const TextStyle(
                   color: Colors.red, fontWeight: FontWeight.bold),
             ),

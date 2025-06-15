@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:unitime/screens/auth/login/login_screen.dart';
@@ -11,7 +10,9 @@ import 'package:unitime/utils/app_colors.dart';
 import 'package:unitime/widgets/bottom_nav_bar.dart';
 import 'package:unitime/screens/task/task_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(const MyApp());
 }
 
@@ -43,10 +44,8 @@ class MyApp extends StatelessWidget {
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/main': (context) => const MainScreen(),
-        // Anda mungkin tidak lagi memerlukan route ini jika navigasi
-        // hanya terjadi di dalam MainScreen
         '/tugas': (context) => const TugasScreen(),
-        '/jadwal': (context) =>  JadwalScreen(),
+        '/jadwal': (context) => JadwalScreen(),
         '/informasiPribadi': (context) => InformasiPribadiScreen()
       },
       debugShowCheckedModeBanner: false,

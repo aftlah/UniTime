@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:unitime/main.dart';
-// import 'package:unitime/screens/home/home_screen.dart';
+import 'package:unitime/models/user_model.dart';
+import 'package:unitime/screens/auth/login/login_screen.dart';
+import 'package:unitime/services/user_service.dart';
 import 'package:unitime/utils/app_colors.dart';
 import 'package:unitime/utils/routes.dart';
 
@@ -13,33 +14,82 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _universityController = TextEditingController();
+  final _universitasController = TextEditingController();
   final _jurusanController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   void dispose() {
-    _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
-    _universityController.dispose();
+    _universitasController.dispose();
     _jurusanController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _register() {
-    if (_formKey.currentState!.validate()) {
-      // ---- [BAGIAN YANG PERLU DIUBAH] ----
-      Navigator.pushAndRemoveUntil(
-        context,
-        // Ganti HomeScreen dengan MainScreen
-        createSlideFadeRoute(const MainScreen()), // <-- PERBAIKAN
-        (Route<dynamic> route) => false,
-      );
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final successMessage = await UserService.register(UserModel(
+        id: 0, 
+        username: _usernameController.text.trim(),
+        email: _emailController.text.trim(),
+        universitas: _universitasController.text.trim(),
+        jurusan: _jurusanController.text.trim(),
+        password: _passwordController.text.trim(),
+      ));
+
+      if (context.mounted) {
+        // 1. Tampilkan SnackBar sukses
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(successMessage),
+            backgroundColor: Colors.green, // Warna hijau untuk sukses
+          ),
+        );
+
+        // 2. Tunggu sejenak agar pengguna sempat membaca pesan
+        await Future.delayed(const Duration(seconds: 2));
+
+        // 3. Arahkan ke halaman Login dan hapus semua rute sebelumnya
+        Navigator.pushAndRemoveUntil(
+          context,
+          createSlideFadeRoute(const LoginScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        // Menampilkan pesan error yang lebih bersih
+        final errorMessage = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal registrasi: $errorMessage'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      // Pastikan loading state kembali false meski navigasi terjadi
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -51,6 +101,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         title: const Text('Buat Akun Baru'),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Center(
         child: SingleChildScrollView(
@@ -71,7 +125,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     style: TextStyle(fontSize: 16, color: Colors.grey[600])),
                 const SizedBox(height: 40),
                 TextFormField(
-                  controller: _nameController,
+                  controller: _usernameController,
                   decoration: const InputDecoration(
                       labelText: 'Nama Lengkap',
                       prefixIcon: Icon(Icons.person_outline),
@@ -104,7 +158,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _universityController,
+                  controller: _universitasController,
                   decoration: const InputDecoration(
                       labelText: 'Universitas',
                       prefixIcon: Icon(Icons.school_outlined),
@@ -166,7 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _register,
+                  onPressed: _isLoading ? null : _register,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -174,9 +228,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     backgroundColor: Colors.blue.shade700,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Daftar',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : const Text('Daftar',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),

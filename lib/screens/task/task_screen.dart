@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart'; // Impor package intl
 
-// Model data untuk Tugas (Tidak berubah)
 class Task {
   final String title;
   final String duration;

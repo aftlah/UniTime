@@ -1,31 +1,28 @@
 class UserModel {
-  final String id;
+  final int id;
   final String username;
   final String email;
-  final String password;
   final String universitas;
   final String jurusan;
-  final String createdAt;
+  final String? password; // Optional jika memang ingin disimpan
 
-  UserModel(
-      {required this.id,
-      required this.username,
-      required this.email,
-      required this.password,
-      required this.universitas,
-      required this.jurusan,
-      required this.createdAt,
+  UserModel({
+    required this.id,
+    required this.username,
+    required this.email,
+    required this.universitas,
+    required this.jurusan,
+    this.password,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
-      id: json['id'],
-      username: json['username'],
-      email: json['email'],
-      password: json['password'],
-      universitas: json['universitas'],
-      jurusan: json['jurusan'],
-      createdAt: json['created_at'],
+      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
+      username: json['username'] ?? '',
+      email: json['email'] ?? '',
+      universitas: json['universitas'] ?? '',
+      jurusan: json['jurusan'] ?? '',
+      password: json['password'], 
     );
   }
 
@@ -34,10 +31,9 @@ class UserModel {
       'id': id,
       'username': username,
       'email': email,
-      'password': password,
       'universitas': universitas,
       'jurusan': jurusan,
-      'created_at': createdAt,
+      if (password != null) 'password': password,
     };
   }
 }

@@ -4,25 +4,29 @@ import 'package:http/http.dart' as http;
 import '../models/schedule_model.dart';
 
 class JadwalService {
-  static const String baseUrl ='https://aftlah.my.id/api-moprog/jadwal_kuliah';
+  static const String baseUrl = 'https://api-moprog.aftlah.my.id/jadwal_kuliah';
 
-  // GET All Jadwal
   static Future<List<JadwalModel>> getAllJadwal() async {
-    final response = await http.get(Uri.parse('$baseUrl/read.php'));
+    final response = await http.get(
+      Uri.parse('$baseUrl/read.php'),
+    );
+
+    // print('Response status: ${response.statusCode}');
+    // print('Response body: ${response.body}');
 
     if (response.statusCode == 200) {
-      final Map<String, dynamic> body = jsonDecode(response.body);
+      final data = jsonDecode(response.body);
 
-      if (body['status'] == true && body.containsKey('data')) {
-        final List<dynamic> data = body['data'];
+      if (data['status'] == true && data['data'] != null && data['data'] is List) {
 
-        return data.map((e) => JadwalModel.fromJson(e)).toList();
+        final List<dynamic> listData = data['data'];
+        return listData.map((json) => JadwalModel.fromJson(json)).toList();
+
       } else {
-        throw Exception(body['message'] ?? 'Gagal memuat data dari server');
+        return [];
       }
     } else {
-      throw Exception(
-          'Gagal menghubungi server. Status: ${response.statusCode}');
+      throw Exception('Gagal terhubung ke server');
     }
   }
 

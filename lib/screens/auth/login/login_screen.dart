@@ -1,7 +1,9 @@
+import 'dart:convert'; // 1. Tambahkan import ini
+
 import 'package:flutter/material.dart';
 import 'package:unitime/main.dart';
-// import 'package:unitime/screens/home/home_screen.dart';
 import 'package:unitime/screens/auth/register/register_screen.dart';
+import 'package:unitime/services/user_service.dart';
 import 'package:unitime/utils/app_colors.dart';
 import 'package:unitime/utils/routes.dart';
 
@@ -17,6 +19,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  bool _isLoading = false;
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -24,14 +28,50 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
-    // ---- [BAGIAN YANG PERLU DIUBAH] ----
-    Navigator.pushAndRemoveUntil(
-      context,
-      // Ganti HomeScreen dengan MainScreen
-      createSlideFadeRoute(const MainScreen()),
-      (Route<dynamic> route) => false,
-    );
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await UserService.login(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      if (context.mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          createSlideFadeRoute(const MainScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      String errorMessage = "Terjadi kesalahan. Silakan coba lagi.";
+
+      try {
+        final errorString = e.toString().replaceAll('Exception: ', '');
+        final errorJson = jsonDecode(errorString);
+        // print("Error JSON: $errorJson");
+
+        if (errorJson['message'] != null) {
+          errorMessage = errorJson['message'];
+        }
+      } catch (_) {
+        errorMessage = e.toString().replaceAll('Exception: ', '');
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -74,6 +114,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(12)))),
                   keyboardType: TextInputType.emailAddress,
+                  validator: (value) =>
+                      value!.isEmpty ? 'Email tidak boleh kosong' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
@@ -84,10 +126,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       prefixIcon: Icon(Icons.lock_outline),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.all(Radius.circular(12)))),
+                  validator: (value) =>
+                      value!.isEmpty ? 'Kata sandi tidak boleh kosong' : null,
                 ),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _login,
+                  onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -95,9 +139,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     backgroundColor: Colors.blue.shade700,
                     foregroundColor: Colors.white,
                   ),
-                  child: const Text('Masuk',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 24,
+                          width: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : const Text('Masuk',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -109,7 +162,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          // DIUBAH: Menggunakan createSlideFadeRoute
                           createSlideFadeRoute(const RegisterScreen()),
                         );
                       },
