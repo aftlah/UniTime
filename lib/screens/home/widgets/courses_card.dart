@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../utils/app_colors.dart';
 
 class CoursesCard extends StatelessWidget {
-  // 1. Tambahkan parameter fungsi callback di constructor
   final VoidCallback onLihatTugasTapped;
 
   const CoursesCard({
     super.key,
-    required this.onLihatTugasTapped, // Jadikan required
+    required this.onLihatTugasTapped,
   });
 
   @override

@@ -10,7 +10,7 @@ class JadwalModel {
   final String jamMulai;
   final String jamSelesai;
   final String ruangan;
-  final DateTime createdAt;
+  final String createdAt;
 
   JadwalModel({
     required this.id,
@@ -37,8 +37,7 @@ class JadwalModel {
       jamMulai: json['jam_mulai'] ?? '00:00:00',
       jamSelesai: json['jam_selesai'] ?? '00:00:00',
       ruangan: json['ruangan'] ?? 'Tanpa Ruangan',
-      // Mengonversi String dari JSON ke DateTime dengan aman
-      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+      createdAt: json['created_at'] as String,
     );
   }
 
@@ -55,8 +54,7 @@ class JadwalModel {
       'jam_mulai': jamMulai,
       'jam_selesai': jamSelesai,
       'ruangan': ruangan,
-      // Mengubah DateTime kembali ke format string yang standar
-      'created_at': createdAt.toIso8601String(),
+      'created_at': createdAt,
     };
   }
 }
