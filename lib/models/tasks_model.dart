@@ -1,8 +1,8 @@
 class TugasModel {
-  final int id;
+  final int? id;
   final int userId;
-  final String kodeMatkul;
-  final String kelompok;
+  // final String kodeMatkul;
+  // final String kelompok;
   final String namaTugas;
   final String matkul;
   final String? deskripsi;
@@ -11,10 +11,10 @@ class TugasModel {
   final String createdAt;
 
   TugasModel({
-    required this.id,
+    this.id, // id tidak wajib
     required this.userId,
-    required this.kodeMatkul,
-    required this.kelompok,
+    // required this.kodeMatkul,
+    // required this.kelompok,
     required this.namaTugas,
     required this.matkul,
     required this.deskripsi,
@@ -25,10 +25,10 @@ class TugasModel {
 
   factory TugasModel.fromJson(Map<String, dynamic> json) {
     return TugasModel(
-      id: json['id'] as int,
+      id: json['id'] != null ? json['id'] as int : null,
       userId: json['user_id'] as int,
-      kodeMatkul: json['kode_matkul'] as String,
-      kelompok: json['kelompok'] as String,
+      // kodeMatkul: json['kode_matkul'] as String,
+      // kelompok: json['kelompok'] as String,
       namaTugas: json['nama_tugas'] as String,
       matkul: json['matkul'] as String,
       deskripsi: json['deskripsi'] != null ? json['deskripsi'] as String : null,
@@ -42,8 +42,8 @@ class TugasModel {
     return {
       'id': id,
       'user_id': userId,
-      'kode_matkul': kodeMatkul,
-      'kelompok': kelompok,
+      // 'kode_matkul': kodeMatkul,
+      // 'kelompok': kelompok,
       'nama_tugas': namaTugas,
       'matkul': matkul,
       'deskripsi': deskripsi,
@@ -53,13 +53,11 @@ class TugasModel {
     };
   }
 
-  // Method ini akan membuat salinan objek TugasModel,
-  // memungkinkan kita untuk "mengubah" properti sambil tetap menjaga immutability.
   TugasModel copyWith({
     int? id,
     int? userId,
-    String? kodeMatkul,
-    String? kelompok,
+    // String? kodeMatkul,
+    // String? kelompok,
     String? namaTugas,
     String? matkul,
     String? deskripsi,
@@ -70,8 +68,8 @@ class TugasModel {
     return TugasModel(
       id: id ?? this.id,
       userId: userId ?? this.userId,
-      kodeMatkul: kodeMatkul ?? this.kodeMatkul,
-      kelompok: kelompok ?? this.kelompok,
+      // kodeMatkul: kodeMatkul ?? this.kodeMatkul,
+      // kelompok: kelompok ?? this.kelompok,
       namaTugas: namaTugas ?? this.namaTugas,
       matkul: matkul ?? this.matkul,
       deskripsi: deskripsi ?? this.deskripsi,

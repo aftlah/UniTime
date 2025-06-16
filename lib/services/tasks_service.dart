@@ -74,40 +74,45 @@ class TugasService {
     }
   }
 
-  static Future<TugasModel> createTugas(TugasModel tugas) async {
+  static Future<bool> createTugas(TugasModel tugas) async {
+
     final user = await UserService.getUserLogin();
+
     if (user == null) {
       throw Exception('User tidak login. Silakan login kembali.');
     }
 
-    final Map<String, dynamic> tugasData = tugas.toJson();
-    tugasData['user_id'] = user.id;
+    final Map<String, String> body = {
+      ...tugas.toJson().map((key, value) => MapEntry(key, value.toString())),
+      'user_id': user.id.toString(),
+    };
 
-    final response = await http.post(
-      Uri.parse('$baseUrl/tugas_create.php'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(tugasData),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/add.php'),
+        body: body,
+      );
 
-    print("CREATE TUGAS RESPONSE: ${response.body}");
+      print("DEBUG Status Code: ${response.statusCode}");
+      print("DEBUG Response Body: ${response.body}");
 
-    if (response.statusCode == 201 || response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['status'] == true) {
-        print("DEBUG: Tugas berhasil dibuat: ${data['data']}");
-        return TugasModel.fromJson(data['data']);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['status'] == false) {
+          throw Exception(data['message'] ?? 'Terjadi kesalahan di server');
+        }
+        return true;
       } else {
-        throw Exception(data['message'] ?? 'Gagal menyimpan tugas.');
+        throw Exception(
+            'Gagal terhubung ke server (Kode: ${response.statusCode})');
       }
-    } else {
-      throw Exception(
-          'Error: Gagal terhubung ke server (Kode: ${response.statusCode})');
+    } catch (e) {
+      throw Exception(e.toString());
     }
   }
 
   static Future<bool> updateTugas(String id, TugasModel tugas) async {
     try {
-      // Buat salinan JSON, lalu hapus id agar tidak konflik (jika ada)
       final tugasJson = tugas.toJson();
       tugasJson.remove('id');
 

@@ -336,7 +336,6 @@ class _TasksSectionState extends State<TasksSection> {
   }
 }
 
-// Class AddTaskForm TIDAK PERLU DIUBAH sama sekali
 class AddTaskForm extends StatefulWidget {
   final VoidCallback onTaskSaved;
 
@@ -347,8 +346,6 @@ class AddTaskForm extends StatefulWidget {
 }
 
 class _AddTaskFormState extends State<AddTaskForm> {
-  // Seluruh kode untuk AddTaskForm sama persis dengan yang Anda miliki.
-  // ...
   final _formKey = GlobalKey<FormState>();
   final _namaTugasController = TextEditingController();
   final _matkulController = TextEditingController();
@@ -409,15 +406,12 @@ class _AddTaskFormState extends State<AddTaskForm> {
 
     try {
       final newTask = TugasModel(
-        id: 0,
         userId: 0,
         namaTugas: _namaTugasController.text,
         matkul: _matkulController.text,
         deskripsi: _deskripsiController.text,
         deadline: _selectedDeadline!,
-        kodeMatkul: '',
-        kelompok: 'Pribadi',
-        status: 'berjalan',
+        status: 'belum',
         createdAt: '',
       );
 
