@@ -78,17 +78,32 @@ class UserService {
     return null;
   }
 
-  static Future<bool> updateUser(String id, UserModel user) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/update.php'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'id': id,
-        ...user.toJson(),
-      }),
-    );
+  static Future<bool> updateBiodata(UserModel user) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/update_user.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id': user.id.toString(),
+          'username': user.username,
+          'email': user.email,
+          'universitas': user.universitas,
+          'jurusan': user.jurusan,
+        }),
+      );
 
-    return response.statusCode == 200;
+      print("DEBUG: Status Code: ${response.statusCode}");
+      print("DEBUG: Body: ${response.body}");
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['status'] == true) {
+        return true;
+      } else {
+        throw Exception(data['message'] ?? 'Gagal update informasi pribadi');
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan: $e');
+    }
   }
 
   static Future<bool> deleteUser(String id) async {
@@ -99,5 +114,37 @@ class UserService {
     );
 
     return response.statusCode == 200;
+  }
+
+  static Future<bool> gantiPassword({
+    required String id,
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    final url = Uri.parse('$baseUrl/ganti_password.php');
+
+    final body = jsonEncode({
+      'id': id,
+      'old_password': oldPassword,
+      'new_password': newPassword,
+    });
+
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      final json = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && json['status'] == true) {
+        return true;
+      } else {
+        throw Exception(json['message'] ?? 'Gagal mengganti password');
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan saat mengganti password: $e');
+    }
   }
 }

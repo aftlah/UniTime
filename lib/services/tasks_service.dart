@@ -75,7 +75,6 @@ class TugasService {
   }
 
   static Future<bool> createTugas(TugasModel tugas) async {
-
     final user = await UserService.getUserLogin();
 
     if (user == null) {
@@ -113,23 +112,28 @@ class TugasService {
 
   static Future<bool> updateTugas(String id, TugasModel tugas) async {
     try {
+      final user = await UserService.getUserLogin();
+      if (user == null) {
+        throw Exception('User tidak login. Silakan login kembali.');
+      }
+
       final tugasJson = tugas.toJson();
-      tugasJson.remove('id');
+      tugasJson.remove('id'); 
 
       final response = await http.post(
         Uri.parse('$baseUrl/update.php'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'id': id,
+          'user_id': user.id.toString(),
           ...tugasJson,
         }),
       );
 
-      final body = response.body;
       print("DEBUG: Update Response Status: ${response.statusCode}");
-      print("DEBUG: Update Response Body: $body");
+      print("DEBUG: Update Response Body: ${response.body}");
 
-      final data = jsonDecode(body);
+      final data = jsonDecode(response.body);
       final message = data['message'] ?? 'Gagal memperbarui tugas';
 
       if (response.statusCode == 200 && data['status'] == true) {
@@ -143,14 +147,24 @@ class TugasService {
   }
 
   static Future<bool> deleteTugas(String id) async {
+    final user = await UserService.getUserLogin();
+
+    if (user == null) {
+      throw Exception('User tidak login. Silakan login kembali.');
+    }
+
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/delete.php'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'id': id}),
+      final response = await http.get(
+        Uri.parse('$baseUrl/delete.php?id=$id&user_id=${user.id}'),
       );
 
-      return response.statusCode == 200;
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && data['status'] == true) {
+        return true;
+      } else {
+        throw Exception(data['message'] ?? 'Gagal menghapus tugas');
+      }
     } catch (e) {
       throw Exception('Terjadi kesalahan saat menghapus tugas: $e');
     }
