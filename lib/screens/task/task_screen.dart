@@ -1,22 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart'; // Impor package intl
+import 'package:intl/intl.dart';
 
-class Task {
-  final String title;
-  final String duration;
-  final String status;
-  final Color color;
+import 'package:unitime/models/tasks_model.dart';
+import 'package:unitime/services/tasks_service.dart';
 
-  Task({
-    required this.title,
-    required this.duration,
-    required this.status,
-    required this.color,
-  });
-}
 
-// Ubah menjadi StatefulWidget
 class TugasScreen extends StatefulWidget {
   const TugasScreen({super.key});
 
@@ -25,19 +14,19 @@ class TugasScreen extends StatefulWidget {
 }
 
 class _TugasScreenState extends State<TugasScreen> {
-  // State untuk menyimpan bulan yang ditampilkan dan tanggal yang dipilih
+  late Future<List<TugasModel>> _tugasFuture;
+
   late DateTime _displayedMonth;
   DateTime? _selectedDate;
 
   @override
   void initState() {
     super.initState();
-    // Inisialisasi dengan tanggal hari ini
     _displayedMonth = DateTime.now();
     _selectedDate = DateTime.now();
+    _tugasFuture = TugasService.getTugas();
   }
 
-  // Fungsi untuk berpindah bulan
   void _changeMonth(int direction) {
     setState(() {
       _displayedMonth = DateTime(
@@ -48,55 +37,56 @@ class _TugasScreenState extends State<TugasScreen> {
     });
   }
 
-  // Data dummy untuk daftar tugas
-  final List<Task> tasks = [
-    Task(
-      title: 'Tugas1',
-      duration: '30 hari',
-      status: 'Selesai',
-      color: const Color(0xFFF9F0FF), // Light Purple
-    ),
-    Task(
-      title: 'Tugas2',
-      duration: '60 hari',
-      status: 'Belum Selesai',
-      color: const Color(0xFFFFF9E6), // Light Yellow
-    ),
-    Task(
-      title: 'Tugas3',
-      duration: '40 hari',
-      status: 'Belum Selesai',
-      color: const Color(0xFFEBF5FF), // Light Blue
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      body: Stack(
-        children: [
-          ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+      body: FutureBuilder<List<TugasModel>>(
+        future: _tugasFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text("Error memuat tugas: ${snapshot.error}"),
+            );
+          }
+
+          final allTasks = snapshot.data ?? [];
+
+          final filteredTasks = _selectedDate == null
+              ? []
+              : allTasks.where((task) {
+                  return DateUtils.isSameDay(task.deadline, _selectedDate!);
+                }).toList();
+
+          return Stack(
             children: [
-              const SizedBox(height: 60),
-              _buildHeader(),
-              const SizedBox(height: 30),
-              _buildCalendar(),
-              const SizedBox(height: 40),
-              _buildTasksSectionHeader(),
-              const SizedBox(height: 20),
-              ...tasks.map((task) => _TaskItem(task: task)).toList(),
-              const SizedBox(height: 120),
+              ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                children: [
+                  const SizedBox(height: 60),
+                  _buildHeader(),
+                  const SizedBox(height: 30),
+                  _buildCalendar(allTasks),
+                  const SizedBox(height: 40),
+                  _buildTasksSectionHeader(allTasks),
+                  const SizedBox(height: 20),
+                  ...filteredTasks
+                      .map((tugas) => _TaskItem(tugas: tugas))
+                      .toList(),
+                  const SizedBox(height: 120),
+                ],
+              ),
             ],
-          ),
-          // _buildBottomNavBar(), // Sesuai kode Anda, ini di-comment
-        ],
+          );
+        },
       ),
     );
   }
 
-  // Widget untuk header "Kalender"
   Widget _buildHeader() {
     return Text(
       'Kalender',
@@ -108,8 +98,7 @@ class _TugasScreenState extends State<TugasScreen> {
     );
   }
 
-  // Widget untuk bagian Kalender
-  Widget _buildCalendar() {
+  Widget _buildCalendar(List<TugasModel> allTasks) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -128,50 +117,40 @@ class _TugasScreenState extends State<TugasScreen> {
         children: [
           _buildCalendarHeader(),
           const SizedBox(height: 20),
-          _buildCalendarGrid(),
+          _buildCalendarGrid(allTasks),
         ],
       ),
     );
   }
 
-  // Header di dalam kalender (Bulan, Tahun, dan navigasi)
   Widget _buildCalendarHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        // Menggunakan data dinamis dari state
         Text(
-          DateFormat('MMMM yyyy')
-              .format(_displayedMonth), // Contoh: "January 2025"
-          style: GoogleFonts.poppins(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+          DateFormat('MMMM yyyy').format(_displayedMonth),
+          style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         Row(
           children: [
-            // Tombol navigasi bulan sebelumnya
             InkWell(
               onTap: () => _changeMonth(-1),
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8)),
                 child: const Icon(Icons.chevron_left, size: 20),
               ),
             ),
             const SizedBox(width: 8),
-            // Tombol navigasi bulan berikutnya
             InkWell(
               onTap: () => _changeMonth(1),
               child: Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8)),
                 child: const Icon(Icons.chevron_right, size: 20),
               ),
             ),
@@ -181,32 +160,30 @@ class _TugasScreenState extends State<TugasScreen> {
     );
   }
 
-  // Grid tanggal kalender (LOGIKA UTAMA YANG BERUBAH)
-  Widget _buildCalendarGrid() {
-    final List<String> daysOfWeek = ['M', 'S', 'S', 'R', 'K', 'J', 'S'];
+  Widget _buildCalendarGrid(List<TugasModel> allTasks) {
+    final taskDates =
+        allTasks.map((task) => DateUtils.dateOnly(task.deadline)).toSet();
 
-    final firstDayOfMonth =
+    final List<String> daysOfWeek = ['M', 'S', 'S', 'R', 'K', 'J', 'S'];
+    final firstDay =
         DateTime(_displayedMonth.year, _displayedMonth.month, 1);
     final daysInMonth =
         DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0).day;
+    final startWeek =
+        (firstDay.weekday == 7) ? 0 : firstDay.weekday;
 
-    // Minggu (7) menjadi 0, Senin (1) menjadi 1, dst.
-    final startWeekday = firstDayOfMonth.weekday % 7;
+    final correctStartWeek = (startWeek == 0) ? 6 : startWeek - 1;
 
     return Column(
       children: [
-        // Baris untuk nama hari (statis)
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: daysOfWeek
-              .map((day) => Text(
-                    day,
-                    style: GoogleFonts.poppins(
-                        fontWeight: FontWeight.w600, color: Colors.grey),
-                  ))
+              .map((day) => Text(day,
+                  style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w600, color: Colors.grey)))
               .toList(),
         ),
-        // const SizedBox(height: 15),
         GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -214,25 +191,20 @@ class _TugasScreenState extends State<TugasScreen> {
             crossAxisCount: 7,
             childAspectRatio: 1.1,
           ),
-          // Total item = hari kosong di awal + jumlah hari dalam sebulan
-          itemCount: daysInMonth + startWeekday,
+          itemCount: daysInMonth + correctStartWeek,
           itemBuilder: (context, index) {
-            // Jika index lebih kecil dari hari pertama, tampilkan container kosong
-            if (index < startWeekday) {
+            if (index < correctStartWeek) {
               return Container();
             }
 
-            final dayNumber = index - startWeekday + 1;
+            final dayNumber = index - correctStartWeek + 1;
             final currentDate = DateTime(
                 _displayedMonth.year, _displayedMonth.month, dayNumber);
-
-            // Cek apakah tanggal ini adalah tanggal yang dipilih
             final bool isSelected = _selectedDate != null &&
                 DateUtils.isSameDay(currentDate, _selectedDate!);
 
-            // Logika styling untuk demo (sama seperti desain)
-            bool hasTask1 = dayNumber == 24;
-            bool hasTask2 = dayNumber == 25;
+            final bool hasTask =
+                taskDates.contains(DateUtils.dateOnly(currentDate));
 
             return GestureDetector(
               onTap: () {
@@ -244,12 +216,11 @@ class _TugasScreenState extends State<TugasScreen> {
                 margin: const EdgeInsets.all(4),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? const Color(0xFF00BFA5) // Teal
-                      : Colors.transparent,
+                  color:
+                      isSelected ? const Color(0xFF00BFA5) : Colors.transparent,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: (hasTask1 || hasTask2)
+                    color: hasTask
                         ? const Color(0xFF00BFA5).withOpacity(0.5)
                         : Colors.transparent,
                     width: 1.5,
@@ -271,17 +242,20 @@ class _TugasScreenState extends State<TugasScreen> {
     );
   }
 
-  // Header untuk bagian "Tasks"
-  Widget _buildTasksSectionHeader() {
+  Widget _buildTasksSectionHeader(List<TugasModel> allTasks) {
+    final completedCount =
+        allTasks.where((task) => task.status.toLowerCase() == 'selesai').length;
+    final totalCount = allTasks.length;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          'Tugas', // Diubah ke Bahasa Indonesia
+          'Tugas',
           style: GoogleFonts.poppins(fontSize: 22, fontWeight: FontWeight.bold),
         ),
         Text(
-          'Selesai  1/3', // Diubah ke Bahasa Indonesia
+          'Selesai $completedCount/$totalCount',
           style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade600),
         ),
       ],
@@ -289,18 +263,72 @@ class _TugasScreenState extends State<TugasScreen> {
   }
 }
 
-// Widget terpisah untuk setiap item tugas (Tidak berubah)
 class _TaskItem extends StatelessWidget {
-  final Task task;
-  const _TaskItem({required this.task});
+  final TugasModel tugas;
+  const _TaskItem({required this.tugas});
+
+  Color _getColorForStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'selesai':
+        return const Color(0xFFF9F0FF);
+      case 'proses':
+        return const Color(0xFFEBF5FF);
+      case 'belum':
+        return const Color(0xFFFFF9E6);
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  String _getFormattedStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'selesai':
+        return 'Selesai';
+      case 'proses':
+        return 'Proses';
+      case 'belum':
+        return 'Belum Dikerjakan';
+      default:
+        return status;
+    }
+  }
+
+  Color _getStatusTextColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'selesai':
+        return Colors.deepPurple.shade300;
+      case 'proses':
+        return Colors.blue.shade400;
+      case 'belum':
+        return Colors.orange.shade400;
+      default:
+        return Colors.grey.shade600;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+
+    final deadlineDate = DateUtils.dateOnly(tugas.deadline);
+    final today = DateUtils.dateOnly(DateTime.now());
+
+    final differenceInDays = deadlineDate.difference(today).inDays;
+
+    String durationText;
+    if (differenceInDays == 0) {
+      durationText = 'Hari ini';
+    } else if (differenceInDays > 0) {
+      durationText = '$differenceInDays hari lagi';
+    } else {
+      final daysOverdue = differenceInDays.abs();
+      durationText = 'Terlambat $daysOverdue hari';
+    }
+
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: task.color,
+        color: _getColorForStatus(tugas.status),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -310,12 +338,11 @@ class _TaskItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                task.title,
+                tugas.namaTugas,
                 style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87),
               ),
               const SizedBox(height: 5),
               Row(
@@ -324,7 +351,7 @@ class _TaskItem extends StatelessWidget {
                       color: Colors.grey.shade600, size: 16),
                   const SizedBox(width: 5),
                   Text(
-                    task.duration,
+                    durationText, 
                     style: GoogleFonts.poppins(color: Colors.grey.shade700),
                   ),
                 ],
@@ -332,14 +359,11 @@ class _TaskItem extends StatelessWidget {
             ],
           ),
           Text(
-            task.status,
+            _getFormattedStatus(tugas.status),
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w500,
-              // Logika warna status diubah sedikit agar sesuai dengan teks baru
-              color: task.status == 'Selesai'
-                  ? Colors.deepPurple.shade300
-                  : Colors.orange.shade400,
+              color: _getStatusTextColor(tugas.status),
             ),
           ),
         ],
