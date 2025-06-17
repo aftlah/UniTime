@@ -27,7 +27,7 @@ class JadwalModel {
 
   factory JadwalModel.fromJson(Map<String, dynamic> json) {
     return JadwalModel(
-      // Mengonversi String dari JSON ke int dengan aman
+      
       id: int.tryParse(json['id'].toString()) ?? 0,
       userId: int.tryParse(json['user_id'].toString()) ?? 0,
       kodeMatkul: json['kode_matkul'] ?? '',
@@ -41,8 +41,6 @@ class JadwalModel {
     );
   }
 
-  // Method untuk mengubah instance kelas menjadi Map (JSON)
-  // Berguna saat mengirim data ke API (Create/Update)
   Map<String, dynamic> toJson() {
     return {
       'id': id,

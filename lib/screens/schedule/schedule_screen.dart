@@ -110,9 +110,9 @@ class _JadwalScreenState extends State<JadwalScreen> {
                   }
                   if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                     if (_selectedDay == 'Semua') {
-                      return _buildGroupedScheduleList(snapshot.data!);
+                      return _buildScheduleList(snapshot.data!);
                     } else {
-                      return _buildSingleDayScheduleList(snapshot.data!);
+                      return _buildDayScheduleList(snapshot.data!);
                     }
                   }
                   return Center(
@@ -126,7 +126,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
     );
   }
 
-  Widget _buildGroupedScheduleList(List<JadwalModel> allSchedules) {
+  Widget _buildScheduleList(List<JadwalModel> allSchedules) {
     Map<String, List<JadwalModel>> gruopSchedule = {};
     for (var jadwal in allSchedules) {
       if (!gruopSchedule.containsKey(jadwal.hari)) {
@@ -171,7 +171,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
     );
   }
 
-  Widget _buildSingleDayScheduleList(List<JadwalModel> schedules) {
+  Widget _buildDayScheduleList(List<JadwalModel> schedules) {
     if (schedules.isEmpty) {
       return Center(child: Text("Tidak ada jadwal untuk hari $_selectedDay."));
     }
