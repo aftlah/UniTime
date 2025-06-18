@@ -1,10 +1,12 @@
+// Lokasi file: lib/screens/tugas/tugas_screen.dart (atau sesuaikan)
+// Pastikan semua path import di bawah ini sudah benar.
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 import 'package:unitime/models/tasks_model.dart';
 import 'package:unitime/services/tasks_service.dart';
-
 
 class TugasScreen extends StatefulWidget {
   const TugasScreen({super.key});
@@ -15,7 +17,6 @@ class TugasScreen extends StatefulWidget {
 
 class _TugasScreenState extends State<TugasScreen> {
   late Future<List<TugasModel>> _tugasFuture;
-
   late DateTime _displayedMonth;
   DateTime? _selectedDate;
 
@@ -24,7 +25,14 @@ class _TugasScreenState extends State<TugasScreen> {
     super.initState();
     _displayedMonth = DateTime.now();
     _selectedDate = DateTime.now();
-    _tugasFuture = TugasService.getTugas();
+    _refreshTugas();
+  }
+  
+  // Fungsi untuk memuat ulang data dari API dan memperbarui UI
+  void _refreshTugas() {
+    setState(() {
+      _tugasFuture = TugasService.getTugas();
+    });
   }
 
   void _changeMonth(int direction) {
@@ -55,7 +63,6 @@ class _TugasScreenState extends State<TugasScreen> {
           }
 
           final allTasks = snapshot.data ?? [];
-
           final filteredTasks = _selectedDate == null
               ? []
               : allTasks.where((task) {
@@ -74,9 +81,18 @@ class _TugasScreenState extends State<TugasScreen> {
                   const SizedBox(height: 40),
                   _buildTasksSectionHeader(allTasks),
                   const SizedBox(height: 20),
-                  ...filteredTasks
-                      .map((tugas) => _TaskItem(tugas: tugas))
-                      .toList(),
+                  // Jika tidak ada tugas terfilter, tampilkan pesan
+                  if (filteredTasks.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40.0),
+                      child: Center(child: Text("Tidak ada tugas untuk tanggal ini.")),
+                    )
+                  else
+                    // Kirim fungsi refresh ke setiap item tugas
+                    ...filteredTasks.map((tugas) => _TaskItem(
+                      tugas: tugas,
+                      onStatusChanged: _refreshTugas,
+                    )).toList(),
                   const SizedBox(height: 120),
                 ],
               ),
@@ -165,14 +181,13 @@ class _TugasScreenState extends State<TugasScreen> {
         allTasks.map((task) => DateUtils.dateOnly(task.deadline)).toSet();
 
     final List<String> daysOfWeek = ['M', 'S', 'S', 'R', 'K', 'J', 'S'];
-    final firstDay =
+    final firstDayOfMonth =
         DateTime(_displayedMonth.year, _displayedMonth.month, 1);
     final daysInMonth =
         DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0).day;
-    final startWeek =
-        (firstDay.weekday == 7) ? 0 : firstDay.weekday;
+    final startWeekday = (firstDayOfMonth.weekday == 7) ? 0 : firstDayOfMonth.weekday;
 
-    final correctStartWeek = (startWeek == 0) ? 6 : startWeek - 1;
+    final correctStartWeekday = (startWeekday == 0) ? 6 : startWeekday - 1;
 
     return Column(
       children: [
@@ -191,13 +206,13 @@ class _TugasScreenState extends State<TugasScreen> {
             crossAxisCount: 7,
             childAspectRatio: 1.1,
           ),
-          itemCount: daysInMonth + correctStartWeek,
+          itemCount: daysInMonth + correctStartWeekday,
           itemBuilder: (context, index) {
-            if (index < correctStartWeek) {
+            if (index < correctStartWeekday) {
               return Container();
             }
 
-            final dayNumber = index - correctStartWeek + 1;
+            final dayNumber = index - correctStartWeekday + 1;
             final currentDate = DateTime(
                 _displayedMonth.year, _displayedMonth.month, dayNumber);
             final bool isSelected = _selectedDate != null &&
@@ -265,55 +280,102 @@ class _TugasScreenState extends State<TugasScreen> {
 
 class _TaskItem extends StatelessWidget {
   final TugasModel tugas;
-  const _TaskItem({required this.tugas});
+  final VoidCallback onStatusChanged;
+
+  const _TaskItem({required this.tugas, required this.onStatusChanged});
+
+  void _showStatusOptions(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text('Ubah Status Tugas', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildStatusOption(dialogContext, 'Belum', 'Belum Dikerjakan'),
+              _buildStatusOption(dialogContext, 'Proses', 'Proses'),
+              _buildStatusOption(dialogContext, 'Selesai', 'Selesai'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text('Batal', style: GoogleFonts.poppins()),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  Widget _buildStatusOption(BuildContext context, String statusValue, String statusText) {
+    return ListTile(
+      title: Text(statusText, style: GoogleFonts.poppins()),
+      trailing: tugas.status.toLowerCase() == statusValue ? Icon(Icons.check, color: Colors.green) : null,
+      onTap: () {
+        Navigator.of(context).pop(); 
+        _updateStatus(context, statusValue); 
+      },
+    );
+  }
+
+  Future<void> _updateStatus(BuildContext context, String newStatus) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(SnackBar(
+      content: Text('Mengupdate status...'),
+      duration: Duration(seconds: 1),
+    ));
+
+    try {
+      final updatedTask = tugas.copyWith(status: newStatus);
+      await TugasService.updateTugas(tugas.id.toString(), updatedTask);
+      
+      onStatusChanged(); // Panggil callback untuk refresh UI parent
+      messenger.showSnackBar(SnackBar(
+        content: Text('Status berhasil diubah!'),
+        backgroundColor: Colors.green,
+      ));
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(
+        content: Text('Gagal mengubah status: ${e.toString()}'),
+        backgroundColor: Colors.red,
+      ));
+    }
+  }
 
   Color _getColorForStatus(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai':
-        return const Color(0xFFF9F0FF);
-      case 'proses':
-        return const Color(0xFFEBF5FF);
-      case 'belum':
-        return const Color(0xFFFFF9E6);
-      default:
-        return Colors.grey.shade200;
+      case 'selesai': return const Color(0xFFF9F0FF);
+      case 'proses': return const Color(0xFFEBF5FF);
+      case 'belum': return const Color(0xFFFFF9E6);
+      default: return Colors.grey.shade200;
     }
   }
 
   String _getFormattedStatus(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai':
-        return 'Selesai';
-      case 'proses':
-        return 'Proses';
-      case 'belum':
-        return 'Belum Dikerjakan';
-      default:
-        return status;
+      case 'selesai': return 'Selesai';
+      case 'proses': return 'Proses';
+      case 'belum': return 'Belum Dikerjakan';
+      default: return status;
     }
   }
 
   Color _getStatusTextColor(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai':
-        return Colors.deepPurple.shade300;
-      case 'proses':
-        return Colors.blue.shade400;
-      case 'belum':
-        return Colors.orange.shade400;
-      default:
-        return Colors.grey.shade600;
+      case 'selesai': return Colors.deepPurple.shade300;
+      case 'proses': return Colors.blue.shade400;
+      case 'belum': return Colors.orange.shade400;
+      default: return Colors.grey.shade600;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-
     final deadlineDate = DateUtils.dateOnly(tugas.deadline);
     final today = DateUtils.dateOnly(DateTime.now());
-
     final differenceInDays = deadlineDate.difference(today).inDays;
-
     String durationText;
     if (differenceInDays == 0) {
       durationText = 'Hari ini';
@@ -324,49 +386,58 @@ class _TaskItem extends StatelessWidget {
       durationText = 'Terlambat $daysOverdue hari';
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: _getColorForStatus(tugas.status),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                tugas.namaTugas,
-                style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87),
-              ),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  Icon(Icons.timer_outlined,
-                      color: Colors.grey.shade600, size: 16),
-                  const SizedBox(width: 5),
-                  Text(
-                    durationText, 
-                    style: GoogleFonts.poppins(color: Colors.grey.shade700),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Text(
-            _getFormattedStatus(tugas.status),
-            style: GoogleFonts.poppins(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: _getStatusTextColor(tugas.status),
+    return GestureDetector(
+      onTap: () => _showStatusOptions(context),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _getColorForStatus(tugas.status),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  tugas.namaTugas,
+                  style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87),
+                ),
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    Icon(Icons.timer_outlined,
+                        color: Colors.grey.shade600, size: 16),
+                    const SizedBox(width: 5),
+                    Text(
+                      durationText, 
+                      style: GoogleFonts.poppins(color: Colors.grey.shade700),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-        ],
+            Row(
+              children: [
+                Text(
+                  _getFormattedStatus(tugas.status),
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: _getStatusTextColor(tugas.status),
+                  ),
+                ),
+                SizedBox(width: 4),
+                Icon(Icons.edit, size: 14, color: Colors.grey),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
