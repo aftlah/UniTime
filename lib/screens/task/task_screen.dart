@@ -1,6 +1,3 @@
-// Lokasi file: lib/screens/tugas/tugas_screen.dart (atau sesuaikan)
-// Pastikan semua path import di bawah ini sudah benar.
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -27,8 +24,7 @@ class _TugasScreenState extends State<TugasScreen> {
     _selectedDate = DateTime.now();
     _refreshTugas();
   }
-  
-  // Fungsi untuk memuat ulang data dari API dan memperbarui UI
+
   void _refreshTugas() {
     setState(() {
       _tugasFuture = TugasService.getTugas();
@@ -81,18 +77,21 @@ class _TugasScreenState extends State<TugasScreen> {
                   const SizedBox(height: 40),
                   _buildTasksSectionHeader(allTasks),
                   const SizedBox(height: 20),
-                  // Jika tidak ada tugas terfilter, tampilkan pesan
+                  
                   if (filteredTasks.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 40.0),
-                      child: Center(child: Text("Tidak ada tugas untuk tanggal ini.")),
+                      child: Center(
+                          child: Text("Tidak ada tugas untuk tanggal ini.")),
                     )
                   else
-                    // Kirim fungsi refresh ke setiap item tugas
-                    ...filteredTasks.map((tugas) => _TaskItem(
-                      tugas: tugas,
-                      onStatusChanged: _refreshTugas,
-                    )).toList(),
+                    
+                    ...filteredTasks
+                        .map((tugas) => _TaskItem(
+                              tugas: tugas,
+                              onStatusChanged: _refreshTugas,
+                            ))
+                        .toList(),
                   const SizedBox(height: 120),
                 ],
               ),
@@ -185,7 +184,8 @@ class _TugasScreenState extends State<TugasScreen> {
         DateTime(_displayedMonth.year, _displayedMonth.month, 1);
     final daysInMonth =
         DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0).day;
-    final startWeekday = (firstDayOfMonth.weekday == 7) ? 0 : firstDayOfMonth.weekday;
+    final startWeekday =
+        (firstDayOfMonth.weekday == 7) ? 0 : firstDayOfMonth.weekday;
 
     final correctStartWeekday = (startWeekday == 0) ? 6 : startWeekday - 1;
 
@@ -289,7 +289,8 @@ class _TaskItem extends StatelessWidget {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Ubah Status Tugas', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          title: Text('Ubah Status Tugas',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -308,14 +309,17 @@ class _TaskItem extends StatelessWidget {
       },
     );
   }
-  
-  Widget _buildStatusOption(BuildContext context, String statusValue, String statusText) {
+
+  Widget _buildStatusOption(
+      BuildContext context, String statusValue, String statusText) {
     return ListTile(
       title: Text(statusText, style: GoogleFonts.poppins()),
-      trailing: tugas.status.toLowerCase() == statusValue ? Icon(Icons.check, color: Colors.green) : null,
+      trailing: tugas.status.toLowerCase() == statusValue
+          ? Icon(Icons.check, color: Colors.green)
+          : null,
       onTap: () {
-        Navigator.of(context).pop(); 
-        _updateStatus(context, statusValue); 
+        Navigator.of(context).pop();
+        _updateStatus(context, statusValue);
       },
     );
   }
@@ -330,8 +334,8 @@ class _TaskItem extends StatelessWidget {
     try {
       final updatedTask = tugas.copyWith(status: newStatus);
       await TugasService.updateTugas(tugas.id.toString(), updatedTask);
-      
-      onStatusChanged(); // Panggil callback untuk refresh UI parent
+
+      onStatusChanged(); 
       messenger.showSnackBar(SnackBar(
         content: Text('Status berhasil diubah!'),
         backgroundColor: Colors.green,
@@ -346,28 +350,40 @@ class _TaskItem extends StatelessWidget {
 
   Color _getColorForStatus(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai': return const Color(0xFFF9F0FF);
-      case 'proses': return const Color(0xFFEBF5FF);
-      case 'belum': return const Color(0xFFFFF9E6);
-      default: return Colors.grey.shade200;
+      case 'selesai':
+        return const Color(0xFFF9F0FF);
+      case 'proses':
+        return const Color(0xFFEBF5FF);
+      case 'belum':
+        return const Color(0xFFFFF9E6);
+      default:
+        return Colors.grey.shade200;
     }
   }
 
   String _getFormattedStatus(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai': return 'Selesai';
-      case 'proses': return 'Proses';
-      case 'belum': return 'Belum Dikerjakan';
-      default: return status;
+      case 'selesai':
+        return 'Selesai';
+      case 'proses':
+        return 'Proses';
+      case 'belum':
+        return 'Belum Dikerjakan';
+      default:
+        return status;
     }
   }
 
   Color _getStatusTextColor(String status) {
     switch (status.toLowerCase()) {
-      case 'selesai': return Colors.deepPurple.shade300;
-      case 'proses': return Colors.blue.shade400;
-      case 'belum': return Colors.orange.shade400;
-      default: return Colors.grey.shade600;
+      case 'selesai':
+        return Colors.deepPurple.shade300;
+      case 'proses':
+        return Colors.blue.shade400;
+      case 'belum':
+        return Colors.orange.shade400;
+      default:
+        return Colors.grey.shade600;
     }
   }
 
@@ -415,7 +431,7 @@ class _TaskItem extends StatelessWidget {
                         color: Colors.grey.shade600, size: 16),
                     const SizedBox(width: 5),
                     Text(
-                      durationText, 
+                      durationText,
                       style: GoogleFonts.poppins(color: Colors.grey.shade700),
                     ),
                   ],
