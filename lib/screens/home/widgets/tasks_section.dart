@@ -5,7 +5,12 @@ import 'package:unitime/services/tasks_service.dart';
 import '../../../utils/app_colors.dart';
 
 class TasksSection extends StatefulWidget {
-  const TasksSection({super.key});
+  final VoidCallback onLihatSemuaTapped;
+
+  const TasksSection({
+    super.key,
+    required this.onLihatSemuaTapped,
+  });
 
   @override
   State<TasksSection> createState() => _TasksSectionState();
@@ -55,12 +60,10 @@ class _TasksSectionState extends State<TasksSection> {
   }
 
   Future<void> _handleUpdateStatus(TugasModel task, bool isCompleted) async {
-    
     final updatedTask =
         task.copyWith(status: isCompleted ? 'selesai' : 'berjalan');
 
     try {
-    
       final success =
           await TugasService.updateTugas(task.id.toString(), updatedTask);
 
@@ -92,7 +95,15 @@ class _TasksSectionState extends State<TasksSection> {
           children: [
             const Text('Tugas',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            TextButton(onPressed: () {}, child: const Text('Lihat Semua')),
+            // TextButton(
+            //   onPressed: widget.onLihatSemuaTapped,
+            //   child: const Text('Lihat Semua'),
+            // ),
+            TextButton.icon(
+              onPressed: widget.onLihatSemuaTapped,
+              icon: const Text('Lihat Semua'),
+              label: const Icon(Icons.chevron_right, color: Colors.black),
+            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -172,7 +183,6 @@ class _TasksSectionState extends State<TasksSection> {
     );
   }
 
-  // --- Widget ini sekarang menggunakan _handleUpdateStatus ---
   Widget _buildTaskItem(TugasModel tugas) {
     final deadlineFormatted = DateFormat('dd-MM-yyyy').format(tugas.deadline);
 
@@ -182,7 +192,6 @@ class _TasksSectionState extends State<TasksSection> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        // Ubah warna/opacity jika sudah selesai
         color: isCompleted
             ? Colors.grey.withOpacity(0.5)
             : AppColors.cardGreen.withOpacity(0.7),
@@ -202,7 +211,6 @@ class _TasksSectionState extends State<TasksSection> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    // Coret teks jika sudah selesai
                     decoration: isCompleted
                         ? TextDecoration.lineThrough
                         : TextDecoration.none,
@@ -273,8 +281,6 @@ class _TasksSectionState extends State<TasksSection> {
       height: 40,
       width: double.infinity,
       decoration: BoxDecoration(
-        // Anda bisa menambahkan sedikit latar belakang abu-abu di sini jika mau
-        // color: Colors.grey[200],
         borderRadius: BorderRadius.circular(10),
       ),
       child: LayoutBuilder(
@@ -284,7 +290,6 @@ class _TasksSectionState extends State<TasksSection> {
 
           return Stack(
             children: [
-              // Ini adalah indikator yang bergeser
               AnimatedPositioned(
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeInOut,
@@ -294,13 +299,13 @@ class _TasksSectionState extends State<TasksSection> {
                   height: 40,
                   decoration: BoxDecoration(
                     color: AppColors
-                        .lightLavender, // Pastikan warna ini ada di app_colors.dart
+                        .lightLavender, 
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
               ),
 
-              // Ini adalah teks 'Kemarin', 'Hari Ini', 'Besok'
+              // Ini teks 'Kemarin', 'Hari Ini', 'Besok'
               Row(
                 children: _days.map((day) {
                   final bool isSelected = selectedDay == day;
@@ -318,9 +323,8 @@ class _TasksSectionState extends State<TasksSection> {
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
                             color: isSelected
-                                ? AppColors.darkPurple // Pastikan warna ini ada
-                                : AppColors
-                                    .secondaryText, // Pastikan warna ini ada
+                                ? AppColors.darkPurple
+                                : AppColors.secondaryText,
                           ),
                         ),
                       ),

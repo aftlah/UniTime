@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:unitime/models/schedule_model.dart';
 import 'package:unitime/services/schedule_service.dart';
@@ -6,7 +8,9 @@ import '../../../utils/app_colors.dart';
 import 'package:unitime/widgets/add_schedule_form.dart';
 
 class ScheduleCard extends StatefulWidget {
-  const ScheduleCard({super.key});
+
+  final VoidCallback onLihatSemuaTapped;
+  const ScheduleCard({super.key, required this.onLihatSemuaTapped});
 
   @override
   State<ScheduleCard> createState() => _ScheduleCardState();
@@ -66,18 +70,29 @@ class _ScheduleCardState extends State<ScheduleCard> {
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // children: [
+          //   const Text('Jadwal Kuliah Hari Ini',
+          //       style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          //   TextButton(
+          //     onPressed: () {
+          //       Navigator.push(
+          //           context,
+          //           MaterialPageRoute(
+          //               builder: (context) => const JadwalScreen()));
+          //     },
+          //     child: const Text('Lihat Semua',
+          //         style: TextStyle(color: Colors.black)),
+                  
+          //   ),
+          // ],
+
           children: [
-            const Text('Jadwal Kuliah Hari Ini',
+            const Text('Jadwal Hari Ini',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-            TextButton(
-              onPressed: () {
-                Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const JadwalScreen()));
-              },
-              child: const Text('Lihat Semua',
-                  style: TextStyle(color: Colors.black)),
+            TextButton.icon(
+              onPressed: widget.onLihatSemuaTapped,
+              icon: const Text('Lihat Semua'),
+              label: const Icon(Icons.chevron_right, color: Colors.black),
             ),
           ],
         ),
