@@ -1,9 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-
 import 'package:unitime/models/tasks_model.dart';
 import 'package:unitime/services/tasks_service.dart';
+import 'package:unitime/widgets/add_task_form.dart';
 
 class TugasScreen extends StatefulWidget {
   const TugasScreen({super.key});
@@ -39,6 +40,58 @@ class _TugasScreenState extends State<TugasScreen> {
         1,
       );
     });
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(message),
+      backgroundColor: isError ? Colors.red.shade600 : Colors.green.shade600,
+    ));
+  }
+
+  void _showEditTugasForm(TugasModel tugas) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddTaskForm(
+        onTaskSaved: _refreshTugas,
+        initialTask: tugas,
+      ),
+    );
+  }
+
+  Future<void> _handleDeleteTugas(TugasModel tugas) async {
+    final bool? confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: Text('Anda yakin ingin menghapus tugas "${tugas.namaTugas}"?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        await TugasService.deleteTugas(tugas.id.toString());
+        _showSnackBar('Tugas berhasil dihapus!');
+        _refreshTugas();
+      } catch (e) {
+        _showSnackBar(
+            'Gagal menghapus tugas: ${e.toString().replaceAll("Exception: ", "")}',
+            isError: true);
+      }
+    }
   }
 
   @override
@@ -77,7 +130,6 @@ class _TugasScreenState extends State<TugasScreen> {
                   const SizedBox(height: 40),
                   _buildTasksSectionHeader(allTasks),
                   const SizedBox(height: 20),
-                  
                   if (filteredTasks.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 40.0),
@@ -85,11 +137,12 @@ class _TugasScreenState extends State<TugasScreen> {
                           child: Text("Tidak ada tugas untuk tanggal ini.")),
                     )
                   else
-                    
                     ...filteredTasks
                         .map((tugas) => _TaskItem(
                               tugas: tugas,
-                              onStatusChanged: _refreshTugas,
+                              onMutated: _refreshTugas,
+                              onEdit: () => _showEditTugasForm(tugas),
+                              onDelete: () => _handleDeleteTugas(tugas),
                             ))
                         .toList(),
                   const SizedBox(height: 120),
@@ -186,7 +239,6 @@ class _TugasScreenState extends State<TugasScreen> {
         DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0).day;
     final startWeekday =
         (firstDayOfMonth.weekday == 7) ? 0 : firstDayOfMonth.weekday;
-
     final correctStartWeekday = (startWeekday == 0) ? 6 : startWeekday - 1;
 
     return Column(
@@ -280,29 +332,56 @@ class _TugasScreenState extends State<TugasScreen> {
 
 class _TaskItem extends StatelessWidget {
   final TugasModel tugas;
-  final VoidCallback onStatusChanged;
+  final VoidCallback onMutated;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
-  const _TaskItem({required this.tugas, required this.onStatusChanged});
+  const _TaskItem({
+    required this.tugas,
+    required this.onMutated,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
-  void _showStatusOptions(BuildContext context) {
+  void _showTaskActionsDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Ubah Status Tugas',
+          title: Text('Pilih Aksi',
               style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          contentPadding: const EdgeInsets.only(top: 12.0),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildStatusOption(dialogContext, 'Belum', 'Belum Dikerjakan'),
-              _buildStatusOption(dialogContext, 'Proses', 'Proses'),
-              _buildStatusOption(dialogContext, 'Selesai', 'Selesai'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Text('Ubah status tugas menjadi:',
+                    style: GoogleFonts.poppins(color: Colors.black54)),
+              ),
+              const SizedBox(height: 8),
+              _buildStatusOption(dialogContext, 'belum', 'Belum Dikerjakan'),
+              _buildStatusOption(dialogContext, 'proses', 'Proses'),
+              _buildStatusOption(dialogContext, 'selesai', 'Selesai'),
             ],
           ),
-          actions: [
+          actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Batal', style: GoogleFonts.poppins()),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                onEdit();
+              },
+              child: Text('Edit Tugas',
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                onDelete();
+              },
+              child: Text('Hapus',
+                  style: GoogleFonts.poppins(
+                      color: Colors.red, fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -313,9 +392,10 @@ class _TaskItem extends StatelessWidget {
   Widget _buildStatusOption(
       BuildContext context, String statusValue, String statusText) {
     return ListTile(
+      dense: true,
       title: Text(statusText, style: GoogleFonts.poppins()),
       trailing: tugas.status.toLowerCase() == statusValue
-          ? Icon(Icons.check, color: Colors.green)
+          ? const Icon(Icons.check, color: Colors.green)
           : null,
       onTap: () {
         Navigator.of(context).pop();
@@ -326,7 +406,7 @@ class _TaskItem extends StatelessWidget {
 
   Future<void> _updateStatus(BuildContext context, String newStatus) async {
     final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(SnackBar(
+    messenger.showSnackBar(const SnackBar(
       content: Text('Mengupdate status...'),
       duration: Duration(seconds: 1),
     ));
@@ -335,8 +415,8 @@ class _TaskItem extends StatelessWidget {
       final updatedTask = tugas.copyWith(status: newStatus);
       await TugasService.updateTugas(tugas.id.toString(), updatedTask);
 
-      onStatusChanged(); 
-      messenger.showSnackBar(SnackBar(
+      onMutated();
+      messenger.showSnackBar(const SnackBar(
         content: Text('Status berhasil diubah!'),
         backgroundColor: Colors.green,
       ));
@@ -403,7 +483,7 @@ class _TaskItem extends StatelessWidget {
     }
 
     return GestureDetector(
-      onTap: () => _showStatusOptions(context),
+      onTap: () => _showTaskActionsDialog(context),
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.all(20),
@@ -448,8 +528,9 @@ class _TaskItem extends StatelessWidget {
                     color: _getStatusTextColor(tugas.status),
                   ),
                 ),
-                SizedBox(width: 4),
-                Icon(Icons.edit, size: 14, color: Colors.grey),
+                const SizedBox(width: 4),
+                const Icon(Icons.keyboard_arrow_down,
+                    size: 16, color: Colors.grey),
               ],
             ),
           ],

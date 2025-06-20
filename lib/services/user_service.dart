@@ -93,16 +93,24 @@ class UserService {
       );
 
       print("DEBUG: Status Code: ${response.statusCode}");
-      print("DEBUG: Body: ${response.body}");
+      print("DEBUG: Response Body: ${response.body}");
+
+      if (response.statusCode != 200) {
+        throw Exception('Server mengembalikan status ${response.statusCode}');
+      }
 
       final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['status'] == true) {
+      final status = data['status'] ?? false;
+      final message = data['message'] ?? 'Gagal update informasi pribadi';
+
+      if (status == true) {
         return true;
       } else {
-        throw Exception(data['message'] ?? 'Gagal update informasi pribadi');
+        throw Exception(message);
       }
     } catch (e) {
-      throw Exception('Terjadi kesalahan: $e');
+      print("ERROR: $e");
+      throw Exception('Terjadi kesalahan saat memperbarui biodata: $e');
     }
   }
 
@@ -145,6 +153,32 @@ class UserService {
       }
     } catch (e) {
       throw Exception('Terjadi kesalahan saat mengganti password: $e');
+    }
+  }
+
+  static Future<UserModel> getBiodata(String userId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/get_biodata.php?id=$userId'),
+        headers: {'Accept': 'application/json'},
+      );
+
+      print("DEBUG: Status Code: ${response.statusCode}");
+      print("DEBUG: Response Body: ${response.body}");
+
+      if (response.statusCode != 200) {
+        throw Exception('Gagal mengambil biodata: Status ${response.statusCode}');
+      }
+
+      final data = jsonDecode(response.body);
+
+      if (data['status'] == true && data['data'] != null) {
+        return UserModel.fromJson(data['data']);
+      } else {
+        throw Exception(data['message'] ?? 'Biodata tidak ditemukan');
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan saat mengambil biodata: $e');
     }
   }
 }

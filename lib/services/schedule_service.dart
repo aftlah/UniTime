@@ -113,25 +113,66 @@ class JadwalService {
   }
 
   static Future<bool> updateJadwal(String id, JadwalModel jadwal) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/update.php'),
-      body: {
-        'id': id,
-        ...jadwal.toJson(),
-      },
-    );
+    try {
+      final user = await UserService.getUserLogin();
+      if (user == null) {
+        throw Exception('User tidak login. Silakan login kembali.');
+      }
 
-    return response.statusCode == 200;
+      final jadwalJson = jadwal.toJson();
+      print( "DEBUG: Jadwal JSON: $jadwalJson");
+      jadwalJson.remove('id');
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/update.php'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id': id,
+          'user_id': user.id.toString(),
+          ...jadwalJson,
+        }),
+      );
+
+      print("DEBUG: Update Jadwal Status: ${response.statusCode}");
+      print("DEBUG: Update Jadwal Body: ${response.body}");
+
+      final data = jsonDecode(response.body);
+      final message = data['message'] ?? 'Gagal memperbarui jadwal';
+
+      if (response.statusCode == 200 && data['status'] == true) {
+        return true;
+      } else {
+        throw Exception(message);
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan saat memperbarui jadwal: $e');
+    }
   }
 
   static Future<bool> deleteJadwal(String id) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/delete.php'),
-      body: {
-        'id': id,
-      },
-    );
+    try {
+      final user = await UserService.getUserLogin();
+      if (user == null) {
+        throw Exception('User tidak login. Silakan login kembali.');
+      }
 
-    return response.statusCode == 200;
+      final response = await http.get(
+        Uri.parse('$baseUrl/delete.php?id=$id&user_id=${user.id}'),
+      );
+
+      print("DEBUG: Delete Jadwal Status: ${response.statusCode}");
+      print("DEBUG: Delete Jadwal Body: ${response.body}");
+
+      final data = jsonDecode(response.body);
+      final message = data['message'] ?? 'Gagal menghapus jadwal';
+
+      if (response.statusCode == 200 && data['status'] == true) {
+        return true;
+      } else {
+        throw Exception(message);
+      }
+    } catch (e) {
+      throw Exception('Terjadi kesalahan saat menghapus jadwal: $e');
+    }
   }
 }

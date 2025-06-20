@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:unitime/models/schedule_model.dart';
 import 'package:unitime/services/schedule_service.dart';
 import 'package:unitime/utils/app_colors.dart';
-
 import 'package:unitime/widgets/add_schedule_form.dart';
 
 class JadwalScreen extends StatefulWidget {
@@ -32,15 +31,26 @@ class _JadwalScreenState extends State<JadwalScreen> {
     _loadJadwal(_selectedDay);
   }
 
-  void _loadJadwal(String mode) {
+  void _loadJadwal([String? day]) {
+    final effectiveDay = day ?? _selectedDay;
     setState(() {
-      _selectedDay = mode;
-      if (mode == 'Semua') {
+      _selectedDay = effectiveDay;
+      if (effectiveDay == 'Semua') {
         _jadwalFuture = JadwalService.getAllJadwal();
       } else {
-        _jadwalFuture = JadwalService.getJadwalByHari(mode);
+        _jadwalFuture = JadwalService.getJadwalByHari(effectiveDay);
       }
     });
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red.shade600 : Colors.green.shade600,
+      ),
+    );
   }
 
   void _showAddScheduleForm() {
@@ -50,15 +60,62 @@ class _JadwalScreenState extends State<JadwalScreen> {
       backgroundColor: Colors.transparent,
       builder: (_) {
         return AddScheduleForm(onJadwalSaved: () {
-          _loadJadwal(_selectedDay);
+          _loadJadwal();
         });
       },
     );
   }
 
+  void _showEditScheduleForm(JadwalModel jadwal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddScheduleForm(
+        onJadwalSaved: () => _loadJadwal(),
+        initialJadwal: jadwal,
+      ),
+    );
+  }
+
+  Future<void> _handleDeleteJadwal(JadwalModel jadwal) async {
+    final bool? confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content:
+            Text('Anda yakin ingin menghapus jadwal "${jadwal.namaMatkul}"?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Batal')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      try {
+        final success = await JadwalService.deleteJadwal(jadwal.id.toString());
+        if (success) {
+          _showSnackBar('Jadwal berhasil dihapus!');
+          _loadJadwal();
+        }
+      } catch (e) {
+        _showSnackBar(
+            'Gagal menghapus jadwal: ${e.toString().replaceAll("Exception: ", "")}',
+            isError: true);
+      }
+    }
+  }
+
   Color _getColor(String title) {
     int hash = title.hashCode;
-    switch (hash % 4) {
+    switch (hash.abs() % 4) {
       case 0:
         return AppColors.cardBlue;
       case 1:
@@ -78,11 +135,13 @@ class _JadwalScreenState extends State<JadwalScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text('Jadwal Kuliah',
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            : null,
+        title: const Text('Jadwal Kuliah',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: FloatingActionButton(
@@ -101,13 +160,11 @@ class _JadwalScreenState extends State<JadwalScreen> {
               child: FutureBuilder<List<JadwalModel>>(
                 future: _jadwalFuture,
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+                  if (snapshot.connectionState == ConnectionState.waiting)
                     return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
+                  if (snapshot.hasError)
                     return Center(
                         child: Text("Error: ${snapshot.error.toString()}"));
-                  }
                   if (snapshot.hasData && snapshot.data!.isNotEmpty) {
                     if (_selectedDay == 'Semua') {
                       return _buildScheduleList(snapshot.data!);
@@ -115,7 +172,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                       return _buildDayScheduleList(snapshot.data!);
                     }
                   }
-                  return Center(
+                  return const Center(
                       child: Text("Tidak ada jadwal untuk ditampilkan."));
                 },
               ),
@@ -127,14 +184,13 @@ class _JadwalScreenState extends State<JadwalScreen> {
   }
 
   Widget _buildScheduleList(List<JadwalModel> allSchedules) {
-    Map<String, List<JadwalModel>> gruopSchedule = {};
+    Map<String, List<JadwalModel>> groupSchedule = {};
     for (var jadwal in allSchedules) {
-      if (!gruopSchedule.containsKey(jadwal.hari)) {
-        gruopSchedule[jadwal.hari] = [];
-      }
-      gruopSchedule[jadwal.hari]!.add(jadwal);
+      if (!groupSchedule.containsKey(jadwal.hari))
+        groupSchedule[jadwal.hari] = [];
+      groupSchedule[jadwal.hari]!.add(jadwal);
     }
-    var sortDay = gruopSchedule.keys.toList()
+    var sortDay = groupSchedule.keys.toList()
       ..sort((a, b) =>
           _daysToDisplay.indexOf(a).compareTo(_daysToDisplay.indexOf(b)));
 
@@ -144,7 +200,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
         String hari = sortDay[index];
         String hariKapital =
             hari[0].toUpperCase() + hari.substring(1).toLowerCase();
-        List<JadwalModel> schedulesForDay = gruopSchedule[hari]!;
+        List<JadwalModel> schedulesForDay = groupSchedule[hari]!;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -152,18 +208,14 @@ class _JadwalScreenState extends State<JadwalScreen> {
               padding: const EdgeInsets.symmetric(vertical: 12.0),
               child: Text(
                 hariKapital,
-                style: TextStyle(
+                style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                     color: Colors.black87),
               ),
             ),
             ...schedulesForDay
-                .map((jadwal) => _buildScheduleItem(
-                    jadwal.jamMulai.substring(0, 5),
-                    jadwal.namaMatkul,
-                    '${jadwal.jamMulai.substring(0, 5)} - ${jadwal.jamSelesai.substring(0, 5)}',
-                    _getColor(jadwal.namaMatkul)))
+                .map((jadwal) => _buildScheduleItem(jadwal))
                 .toList(),
           ],
         );
@@ -172,18 +224,12 @@ class _JadwalScreenState extends State<JadwalScreen> {
   }
 
   Widget _buildDayScheduleList(List<JadwalModel> schedules) {
-    if (schedules.isEmpty) {
+    if (schedules.isEmpty)
       return Center(child: Text("Tidak ada jadwal untuk hari $_selectedDay."));
-    }
     return ListView.builder(
       itemCount: schedules.length,
       itemBuilder: (context, index) {
-        final jadwal = schedules[index];
-        return _buildScheduleItem(
-            jadwal.jamMulai.substring(0, 5),
-            jadwal.namaMatkul,
-            '${jadwal.jamMulai.substring(0, 5)} - ${jadwal.jamSelesai.substring(0, 5)}',
-            _getColor(jadwal.namaMatkul));
+        return _buildScheduleItem(schedules[index]);
       },
     );
   }
@@ -196,7 +242,8 @@ class _JadwalScreenState extends State<JadwalScreen> {
           children: [
             Text(
                 _selectedDay == 'Semua' ? 'Semua Jadwal' : 'Hari $_selectedDay',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             TextButton(
               onPressed: () => _loadJadwal('Semua'),
               child: Container(
@@ -257,26 +304,77 @@ class _JadwalScreenState extends State<JadwalScreen> {
     );
   }
 
-  Widget _buildScheduleItem(
-      String time, String title, String duration, Color color) {
+  Widget _buildScheduleItem(JadwalModel jadwal) {
+    final time = jadwal.jamMulai.substring(0, 5);
+    final title = jadwal.namaMatkul;
+    final duration =
+        '${jadwal.jamMulai.substring(0, 5)} - ${jadwal.jamSelesai.substring(0, 5)}';
+    final color = _getColor(jadwal.namaMatkul);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(time, style: TextStyle(color: Colors.grey, fontSize: 12)),
+          Text(time, style: const TextStyle(color: Colors.grey, fontSize: 12)),
           const SizedBox(width: 10),
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                   color: color, borderRadius: BorderRadius.circular(15)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Text(title, style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text(duration,
-                      style: TextStyle(color: Colors.black54, fontSize: 12)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(title,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        Text(duration,
+                            style: const TextStyle(
+                                color: Colors.black54, fontSize: 12)),
+                      ],
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.black87),
+                    color: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    onSelected: (value) {
+                      if (value == 'edit') {
+                        _showEditScheduleForm(jadwal);
+                      } else if (value == 'delete') {
+                        _handleDeleteJadwal(jadwal);
+                      }
+                    },
+                    itemBuilder: (BuildContext context) =>
+                        <PopupMenuEntry<String>>[
+                      PopupMenuItem<String>(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit, size: 20, color: Colors.blue),
+                            const SizedBox(width: 10),
+                            const Text('Edit', style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, size: 20, color: Colors.red),
+                            const SizedBox(width: 10),
+                            const Text('Hapus', style: TextStyle(fontSize: 16)),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
                 ],
               ),
             ),
@@ -286,6 +384,3 @@ class _JadwalScreenState extends State<JadwalScreen> {
     );
   }
 }
-
-// === SEMUA KODE UNTUK `AddScheduleForm` SUDAH DIHAPUS DARI FILE INI ===
-// Karena sekarang dipanggil dari file terpisah (`add_schedule_form.dart`)

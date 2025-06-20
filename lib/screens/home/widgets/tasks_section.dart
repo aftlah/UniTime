@@ -410,6 +410,7 @@ class _AddTaskFormState extends State<AddTaskForm> {
 
     try {
       final newTask = TugasModel(
+        id: 0,
         userId: 0,
         namaTugas: _namaTugasController.text,
         matkul: _matkulController.text,

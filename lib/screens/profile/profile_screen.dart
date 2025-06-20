@@ -1,8 +1,9 @@
-// lib/screens/profile/profile_screen.dart
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:unitime/models/user_model.dart';
-import 'package:unitime/services/user_service.dart'; // 1. IMPORT SERVICE
+import 'package:unitime/services/user_service.dart';
 import 'package:unitime/utils/app_colors.dart';
 import 'package:unitime/screens/auth/login/login_screen.dart';
 import 'package:unitime/screens/profile/informasi_pribadi_screen.dart';
@@ -20,16 +21,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // 2. STATE UNTUK FUTURE USER
   late Future<UserModel?> _userFuture;
 
   @override
   void initState() {
     super.initState();
-    // Inisialisasi future untuk mendapatkan data user
-    _userFuture = UserService.getUserLogin();
+    _userFuture = _loadUserProfile();
 
-    // Animasi
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -41,12 +39,28 @@ class _ProfileScreenState extends State<ProfileScreen>
             CurvedAnimation(
                 parent: _animationController, curve: Curves.easeOut));
 
-    // Mulai animasi setelah future selesai untuk efek yang lebih mulus
     _userFuture.whenComplete(() {
       if (mounted) {
         _animationController.forward();
       }
     });
+  }
+
+  Future<UserModel> _loadUserProfile() async {
+    try {
+      final localUser = await UserService.getUserLogin();
+
+      if (localUser == null) {
+        throw Exception(
+            'Sesi pengguna tidak ditemukan. Silakan login kembali.');
+      }
+
+      final serverUser = await UserService.getBiodata(localUser.id.toString());
+      return serverUser;
+    } catch (e) {
+      throw Exception(
+          'Gagal memuat profil: ${e.toString().replaceAll("Exception:", "")}');
+    }
   }
 
   @override
@@ -55,12 +69,9 @@ class _ProfileScreenState extends State<ProfileScreen>
     super.dispose();
   }
 
-  // 3. FUNGSI LOGOUT YANG SUDAH TERHUBUNG KE SERVICE
   Future<void> _signOut() async {
-    // Panggil fungsi logout dari service untuk menghapus data sesi
     await UserService.logout();
 
-    // Navigasi ke LoginScreen setelah logout berhasil
     if (mounted) {
       Navigator.pushAndRemoveUntil(
         context,
@@ -70,7 +81,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  // 4. DIALOG KONFIRMASI LOGOUT (UX BAIK)
   void _showSignOutConfirmationDialog() {
     showDialog(
       context: context,
@@ -82,15 +92,15 @@ class _ProfileScreenState extends State<ProfileScreen>
             TextButton(
               child: const Text('Batal'),
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Tutup dialog
+                Navigator.of(dialogContext).pop();
               },
             ),
             TextButton(
               child:
                   const Text('Sign Out', style: TextStyle(color: Colors.red)),
               onPressed: () {
-                Navigator.of(dialogContext).pop(); // Tutup dialog
-                _signOut(); // Lanjutkan proses logout
+                Navigator.of(dialogContext).pop();
+                _signOut();
               },
             ),
           ],
@@ -107,26 +117,30 @@ class _ProfileScreenState extends State<ProfileScreen>
         centerTitle: true,
         title: const Text('Profil Saya'),
       ),
-      // 5. MENGGUNAKAN FUTUREBUILDER UNTUK DATA DINAMIS
       body: FutureBuilder<UserModel?>(
         future: _userFuture,
         builder: (context, snapshot) {
-          // State: Loading
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // State: Error atau Tidak Ada User
           if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-            // Bisa menampilkan pesan error atau langsung redirect ke login
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Gagal memuat data pengguna.'),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      snapshot.error.toString().replaceAll(
+                          "Exception: ", ""), 
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   ElevatedButton(
-                    onPressed:
-                        _signOut, // Gunakan signOut untuk membersihkan sisa sesi jika ada
+                    onPressed: _signOut,
                     child: const Text('Kembali ke Halaman Login'),
                   )
                 ],
@@ -134,7 +148,6 @@ class _ProfileScreenState extends State<ProfileScreen>
             );
           }
 
-          // State: Sukses, data pengguna tersedia
           final user = snapshot.data!;
           return SingleChildScrollView(
             padding:
@@ -142,7 +155,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileHeader(user), // Kirim data user ke header
+                _buildProfileHeader(user),
                 const SizedBox(height: 32),
                 _buildSectionTitle('Pengaturan & Akun'),
                 const SizedBox(height: 12),
@@ -162,7 +175,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // === WIDGET BUILDERS (MODIFIKASI PADA HEADER DAN SETTINGS) ===
 
   Widget _buildSectionTitle(String title) {
     return Padding(
@@ -178,7 +190,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // 6. MODIFIKASI HEADER UNTUK MENERIMA DATA DINAMIS
   Widget _buildProfileHeader(UserModel user) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -190,7 +201,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Row(
             children: [
-              // Foto profil (masih statis, bisa dikembangkan)
               const CircleAvatar(
                 radius: 40,
                 backgroundColor: Colors.white,
@@ -206,9 +216,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // DATA DINAMIS DARI USERMODEL
                     Text(
-                      user.username, // <-- DIGANTI
+                      user.username,
                       style: const TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -217,7 +226,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      user.jurusan, // <-- DIGANTI
+                      user.jurusan,
                       style: TextStyle(fontSize: 15, color: Colors.grey[700]),
                     ),
                   ],
@@ -233,7 +242,7 @@ class _ProfileScreenState extends State<ProfileScreen>
               Icon(Icons.school_outlined, color: Colors.grey[700], size: 20),
               const SizedBox(width: 8),
               Text(
-                user.universitas, // <-- DIGANTI
+                user.universitas,
                 style: TextStyle(
                     color: Colors.grey[800],
                     fontSize: 14,
@@ -246,7 +255,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // 7. MENGUBAH ONTAP PADA TOMBOL SIGN OUT
   Widget _buildSettingsSection() {
     return Container(
       decoration: BoxDecoration(
@@ -273,11 +281,10 @@ class _ProfileScreenState extends State<ProfileScreen>
             },
           ),
           _buildDivider(),
-          // Panggil dialog konfirmasi saat tombol ditekan
           _buildSettingsItem(
             Icons.logout,
             'Sign Out',
-            _showSignOutConfirmationDialog, // <-- Panggil dialog
+            _showSignOutConfirmationDialog,
             isDestructive: true,
           ),
         ],
@@ -285,10 +292,8 @@ class _ProfileScreenState extends State<ProfileScreen>
     );
   }
 
-  // (Widget builder di bawah ini tidak perlu diubah)
   Widget _buildSettingsItem(IconData icon, String title, VoidCallback onTap,
       {bool isDestructive = false}) {
-    // ...
     final color = isDestructive ? Colors.red : Colors.black87;
     final iconColor = isDestructive ? Colors.red : Colors.black54;
 
@@ -308,7 +313,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildDivider() {
-    // ...
     return Divider(
         height: 1, color: Colors.grey[200], indent: 16, endIndent: 16);
   }
