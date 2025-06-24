@@ -54,18 +54,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ));
 
       if (context.mounted) {
-        // 1. Tampilkan SnackBar sukses
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(successMessage),
-            backgroundColor: Colors.green, // Warna hijau untuk sukses
+            backgroundColor: Colors.green, 
           ),
         );
 
-        // 2. Tunggu sejenak agar pengguna sempat membaca pesan
         await Future.delayed(const Duration(seconds: 2));
 
-        // 3. Arahkan ke halaman Login dan hapus semua rute sebelumnya
         Navigator.pushAndRemoveUntil(
           context,
           createSlideFadeRoute(const LoginScreen()),
@@ -74,7 +71,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        // Menampilkan pesan error yang lebih bersih
         final errorMessage = e.toString().replaceAll('Exception: ', '');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -84,7 +80,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } finally {
-      // Pastikan loading state kembali false meski navigasi terjadi
       if (mounted) {
         setState(() {
           _isLoading = false;
