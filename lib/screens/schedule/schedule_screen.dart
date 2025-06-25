@@ -307,8 +307,8 @@ class _JadwalScreenState extends State<JadwalScreen> {
   Widget _buildScheduleItem(JadwalModel jadwal) {
     final time = jadwal.jamMulai.substring(0, 5);
     final title = jadwal.namaMatkul;
-    final duration =
-        '${jadwal.jamMulai.substring(0, 5)} - ${jadwal.jamSelesai.substring(0, 5)}';
+    // print(jadwal);
+    final duration = '${jadwal.jamMulai.substring(0, 5)} - ${jadwal.jamSelesai.substring(0, 5)}';
     final color = _getColor(jadwal.namaMatkul);
 
     return Padding(
@@ -331,7 +331,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
                       children: [
                         Text(title,
                             style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
+                                const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                         Text(duration,
                             style: const TextStyle(
                                 color: Colors.black54, fontSize: 12)),

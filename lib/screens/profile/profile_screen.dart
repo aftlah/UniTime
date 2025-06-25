@@ -201,17 +201,17 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Row(
             children: [
-              const CircleAvatar(
-                radius: 40,
-                backgroundColor: Colors.white,
-                child: CircleAvatar(
-                  radius: 37,
-                  backgroundImage: NetworkImage(
-                    'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-                  ),
-                ),
-              ),
-              const SizedBox(width: 16),
+              // const CircleAvatar(
+              //   radius: 40,
+              //   backgroundColor: Colors.white,
+              //   child: CircleAvatar(
+              //     radius: 37,
+              //     backgroundImage: NetworkImage(
+              //       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+              //     ),
+              //   ),
+              // ),
+              // const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
