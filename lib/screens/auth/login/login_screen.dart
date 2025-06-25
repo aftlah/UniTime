@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('UniTime Login'),
+        title: const Text('Login'),
         centerTitle: true,
       ),
       body: Center(
@@ -96,11 +96,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   size: 80,
                   color: Colors.blue.shade700,
                 ),
+                const Text('UniTime',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                
                 const SizedBox(height: 16),
-                const Text('Selamat Datang Kembali',
-                    textAlign: TextAlign.center,
-                    style:
-                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                // const Text('Selamat Datang Kembali',
+                //     textAlign: TextAlign.center,
+                //     style:
+                //         TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
                 Text('Masuk untuk melanjutkan',
                     textAlign: TextAlign.center,
