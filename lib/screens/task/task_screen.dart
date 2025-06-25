@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -50,6 +49,19 @@ class _TugasScreenState extends State<TugasScreen> {
     ));
   }
 
+  // Method untuk menampilkan form tambah tugas baru
+  void _showAddTaskForm() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => AddTaskForm(
+        onTaskSaved: _refreshTugas,
+        // Tidak ada initialTask yang diberikan, sehingga form akan berada dalam mode 'create'
+      ),
+    );
+  }
+
   void _showEditTugasForm(TugasModel tugas) {
     showModalBottomSheet(
       context: context,
@@ -98,6 +110,14 @@ class _TugasScreenState extends State<TugasScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
+      // --- PENAMBAHAN TOMBOL UNTUK MENAMBAH TUGAS ---
+      floatingActionButton: FloatingActionButton(
+        onPressed: _showAddTaskForm,
+        backgroundColor: const Color(0xFF00BFA5),
+        child: const Icon(Icons.add, color: Colors.white),
+        tooltip: 'Tambah Tugas',
+      ),
+      // --- AKHIR PENAMBAHAN ---
       body: FutureBuilder<List<TugasModel>>(
         future: _tugasFuture,
         builder: (context, snapshot) {
@@ -239,6 +259,7 @@ class _TugasScreenState extends State<TugasScreen> {
         DateTime(_displayedMonth.year, _displayedMonth.month + 1, 0).day;
     final startWeekday =
         (firstDayOfMonth.weekday == 7) ? 0 : firstDayOfMonth.weekday;
+    // Penyesuaian agar Senin menjadi hari pertama (index 0)
     final correctStartWeekday = (startWeekday == 0) ? 6 : startWeekday - 1;
 
     return Column(

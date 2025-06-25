@@ -115,6 +115,7 @@ class _JadwalScreenState extends State<JadwalScreen> {
 
   Color _getColor(String title) {
     int hash = title.hashCode;
+    print(hash);
     switch (hash.abs() % 4) {
       case 0:
         return AppColors.cardBlue;
@@ -144,6 +145,14 @@ class _JadwalScreenState extends State<JadwalScreen> {
         title: const Text('Jadwal Kuliah',
             style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _showAddScheduleForm,
+      //   backgroundColor: AppColors.lightLavender,
+      //   tooltip: 'Tambah Jadwal Kuliah',
+      //   child: const Icon(Icons.add, color: AppColors.darkPurple),
+        
+      // ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddScheduleForm,
         backgroundColor: AppColors.lightLavender,
